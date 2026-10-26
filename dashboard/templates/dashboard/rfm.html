@@ -1,0 +1,1303 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Customer RFM Analysis</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Arial, sans-serif;
+            background: #f5f7fb;
+            color: #1f2937;
+        }
+
+        /* =====================================================
+           NAVIGATION
+        ===================================================== */
+
+        .navbar {
+            width: 100%;
+            background: #111827;
+            border-bottom: 1px solid #374151;
+        }
+
+        .navbar-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 16px 24px;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .brand {
+            color: white;
+            text-decoration: none;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-link {
+            color: #d1d5db;
+            text-decoration: none;
+
+            padding: 9px 16px;
+            border-radius: 8px;
+
+            font-size: 14px;
+            font-weight: 600;
+
+            transition: 0.2s;
+        }
+
+        .nav-link:hover {
+            background: #374151;
+            color: white;
+        }
+
+        /* =====================================================
+           MAIN CONTAINER
+        ===================================================== */
+
+        .container {
+            max-width: 1400px;
+            margin: auto;
+            padding: 30px;
+        }
+
+        .page-title {
+            margin-bottom: 25px;
+        }
+
+        .page-title h2 {
+            margin: 0 0 6px 0;
+            font-size: 30px;
+            color: #172b4d;
+        }
+
+        .page-title p {
+            margin: 0;
+            color: #6b7280;
+            font-size: 15px;
+        }
+
+        /* =====================================================
+           KPI CARDS
+        ===================================================== */
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 18px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            padding: 22px;
+            border-radius: 12px;
+
+            box-shadow:
+                0 3px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        .card-title {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .card-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #172b4d;
+        }
+
+        .card-percentage {
+            margin-top: 7px;
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        .champion-card {
+            border-top: 4px solid #16a34a;
+        }
+
+        .loyal-card {
+            border-top: 4px solid #2563eb;
+        }
+
+        .potential-card {
+            border-top: 4px solid #d97706;
+        }
+
+        .risk-card {
+            border-top: 4px solid #dc2626;
+        }
+
+        .attention-card {
+            border-top: 4px solid #6b7280;
+        }
+
+        /* =====================================================
+           GRID
+        ===================================================== */
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+
+            box-shadow:
+                0 3px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        .panel h3 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 19px;
+            color: #172b4d;
+        }
+
+        .chart-container {
+            height: 350px;
+            position: relative;
+        }
+
+       /* =========================
+   TABLES
+========================= */
+
+.table-container {
+    overflow-x: auto;
+}
+
+/* Compact customer tables */
+.compact-table {
+    max-height: 390px;
+    overflow-y: auto;
+    overflow-x: auto;
+    border-radius: 10px;
+}
+
+/* Keep table header visible while scrolling */
+.compact-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #f9fafb;
+}
+
+/* Smaller rows for long customer tables */
+.compact-table th,
+.compact-table td {
+    padding: 10px 12px;
+    font-size: 13px;
+}
+
+/* Standard table */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 850px;
+}
+
+th,
+td {
+    padding: 13px 14px;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 14px;
+}
+
+th {
+    background: #f9fafb;
+    font-weight: 700;
+    color: #374151;
+}
+
+/* Table row hover */
+tbody tr:hover {
+    background: #f9fafb;
+}
+
+        /* =====================================================
+           SEGMENT BADGES
+        ===================================================== */
+
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .champions {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .loyal {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .potential {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .risk {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .attention {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .score {
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        /* =====================================================
+           METHODOLOGY
+        ===================================================== */
+
+        .methodology {
+            line-height: 1.7;
+            margin-bottom: 30px;
+        }
+
+        .methodology p {
+            margin-bottom: 15px;
+        }
+
+        .percentage {
+            color: #6b7280;
+            font-size: 13px;
+        }
+
+        /* =====================================================
+           FOOTER
+        ===================================================== */
+
+        .footer-note {
+            text-align: center;
+            color: #6b7280;
+            font-size: 13px;
+            padding: 10px 0 25px;
+        }
+
+        /* =====================================================
+           RESPONSIVE DESIGN
+        ===================================================== */
+
+        @media (max-width: 900px) {
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 18px;
+            }
+
+            .navbar-container {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .nav-links {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+
+    <link rel="stylesheet" href="{% static 'dashboard/theme.css' %}">
+</head>
+
+
+<body>
+
+    {% include "dashboard/navbar.html" %}
+
+    <main class="container">
+
+        <!-- =================================================
+             PAGE HEADER
+        ================================================= -->
+
+        <section class="page-title">
+
+            <h2>
+                Customer RFM Analysis
+            </h2>
+
+            <p>
+                Customer segmentation using
+                Recency, Frequency and Monetary
+                purchasing behaviour.
+            </p>
+
+        </section>
+
+
+        <!-- =================================================
+             KPI CARDS
+        ================================================= -->
+
+        <section class="cards">
+
+            <!-- Champions -->
+
+            <div class="card champion-card">
+
+                <div class="card-title">
+                    Champions
+                </div>
+
+                <div class="card-value">
+                    {{ champions|floatformat:0 }}
+                </div>
+
+                <div class="card-percentage">
+
+                    {% for segment in segment_data %}
+
+                        {% if segment.segment == "Champions" %}
+
+                            {{ segment.percentage }}%
+                            of customers
+
+                        {% endif %}
+
+                    {% endfor %}
+
+                </div>
+
+            </div>
+
+
+            <!-- Loyal Customers -->
+
+            <div class="card loyal-card">
+
+                <div class="card-title">
+                    Loyal Customers
+                </div>
+
+                <div class="card-value">
+                    {{ loyal_customers|floatformat:0 }}
+                </div>
+
+                <div class="card-percentage">
+
+                    {% for segment in segment_data %}
+
+                        {% if segment.segment == "Loyal Customers" %}
+
+                            {{ segment.percentage }}%
+                            of customers
+
+                        {% endif %}
+
+                    {% endfor %}
+
+                </div>
+
+            </div>
+
+
+            <!-- Potential Loyalists -->
+
+            <div class="card potential-card">
+
+                <div class="card-title">
+                    Potential Loyalists
+                </div>
+
+                <div class="card-value">
+                    {{ potential_loyalists|floatformat:0 }}
+                </div>
+
+                <div class="card-percentage">
+
+                    {% for segment in segment_data %}
+
+                        {% if segment.segment == "Potential Loyalists" %}
+
+                            {{ segment.percentage }}%
+                            of customers
+
+                        {% endif %}
+
+                    {% endfor %}
+
+                </div>
+
+            </div>
+
+
+            <!-- At Risk -->
+
+            <div class="card risk-card">
+
+                <div class="card-title">
+                    At Risk
+                </div>
+
+                <div class="card-value">
+                    {{ at_risk|floatformat:0 }}
+                </div>
+
+                <div class="card-percentage">
+
+                    {% for segment in segment_data %}
+
+                        {% if segment.segment == "At Risk" %}
+
+                            {{ segment.percentage }}%
+                            of customers
+
+                        {% endif %}
+
+                    {% endfor %}
+
+                </div>
+
+            </div>
+
+
+            <!-- Needs Attention -->
+
+            <div class="card attention-card">
+
+                <div class="card-title">
+                    Needs Attention
+                </div>
+
+                <div class="card-value">
+                    {{ needs_attention|floatformat:0 }}
+                </div>
+
+                <div class="card-percentage">
+
+                    {% for segment in segment_data %}
+
+                        {% if segment.segment == "Needs Attention" %}
+
+                            {{ segment.percentage }}%
+                            of customers
+
+                        {% endif %}
+
+                    {% endfor %}
+
+                </div>
+
+            </div>
+
+
+            <!-- Average RFM -->
+
+            <div class="card">
+
+                <div class="card-title">
+                    Average RFM Score
+                </div>
+
+                <div class="card-value">
+                    {{ average_rfm_score }}
+                </div>
+
+                <div class="card-percentage">
+                    Maximum possible score: 15
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             CHARTS
+        ================================================= -->
+
+        <section class="grid">
+
+            <!-- Segment Distribution -->
+
+            <div class="panel">
+
+                <h3>
+                    Customer Segment Distribution
+                </h3>
+
+                <div class="chart-container">
+
+                    <canvas id="segmentChart"></canvas>
+
+                </div>
+
+            </div>
+
+
+            <!-- RFM Score Distribution -->
+
+            <div class="panel">
+
+                <h3>
+                    RFM Score Distribution
+                </h3>
+
+                <div class="chart-container">
+
+                    <canvas id="scoreChart"></canvas>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             SEGMENT SUMMARY
+        ================================================= -->
+
+        <section class="panel methodology">
+
+            <h3>
+                Segment Summary
+            </h3>
+
+            <div class="table-container compact-table">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Segment
+                            </th>
+
+                            <th>
+                                Customers
+                            </th>
+
+                            <th>
+                                Percentage
+                            </th>
+
+                            <th>
+                                Strategic Meaning
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% for segment in segment_data %}
+
+                        <tr>
+
+                            <td>
+
+                                {% if segment.segment == "Champions" %}
+
+                                    <span class="badge champions">
+                                        Champions
+                                    </span>
+
+                                {% elif segment.segment == "Loyal Customers" %}
+
+                                    <span class="badge loyal">
+                                        Loyal Customers
+                                    </span>
+
+                                {% elif segment.segment == "Potential Loyalists" %}
+
+                                    <span class="badge potential">
+                                        Potential Loyalists
+                                    </span>
+
+                                {% elif segment.segment == "At Risk" %}
+
+                                    <span class="badge risk">
+                                        At Risk
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="badge attention">
+                                        Needs Attention
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+
+                            <td>
+                                {{ segment.count|floatformat:0 }}
+                            </td>
+
+
+                            <td class="percentage">
+                                {{ segment.percentage }}%
+                            </td>
+
+
+                            <td>
+
+                                {% if segment.segment == "Champions" %}
+
+                                    Highest-value and highly
+                                    engaged customers.
+
+                                {% elif segment.segment == "Loyal Customers" %}
+
+                                    Consistent customers with
+                                    strong purchasing behaviour.
+
+                                {% elif segment.segment == "Potential Loyalists" %}
+
+                                    Customers with potential
+                                    for stronger long-term loyalty.
+
+                                {% elif segment.segment == "At Risk" %}
+
+                                    Customers showing signs
+                                    of declining engagement.
+
+                                {% else %}
+
+                                    Customers requiring targeted
+                                    re-engagement.
+
+                                {% endif %}
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             TOP CUSTOMERS
+        ================================================= -->
+
+        <section class="panel methodology">
+
+            <h3>
+                Highest-Scoring Customers
+            </h3>
+
+            <p>
+                Customers below have the highest combined
+                RFM scores in the dataset.
+            </p>
+
+            <div class="table-container compact-table">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Customer ID
+                            </th>
+
+                            <th>
+                                Recency
+                            </th>
+
+                            <th>
+                                Frequency
+                            </th>
+
+                            <th>
+                                Monetary
+                            </th>
+
+                            <th>
+                                R Score
+                            </th>
+
+                            <th>
+                                F Score
+                            </th>
+
+                            <th>
+                                M Score
+                            </th>
+
+                            <th>
+                                RFM Score
+                            </th>
+
+                            <th>
+                                Segment
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% for customer in top_customers %}
+
+                        <tr>
+
+                            <td>
+
+                                <a
+                                    href="{% url 'customer_explorer' %}?user_id={{ customer.user_id }}"
+                                    style="
+                                        color: #2563eb;
+                                        text-decoration: none;
+                                        font-weight: 600;
+                                    "
+                                >
+                                    {{ customer.user_id }}
+                                </a>
+
+                            </td>
+
+
+                            <td>
+                                {{ customer.recency|floatformat:0 }}
+                            </td>
+
+
+                            <td>
+                                {{ customer.frequency|floatformat:0 }}
+                            </td>
+
+
+                            <td>
+                                {{ customer.monetary|floatformat:0 }}
+                            </td>
+
+
+                            <td>
+                                {{ customer.recency_score }}
+                            </td>
+
+
+                            <td>
+                                {{ customer.frequency_score }}
+                            </td>
+
+
+                            <td>
+                                {{ customer.monetary_score }}
+                            </td>
+
+
+                            <td class="score">
+                                {{ customer.rfm_score }}
+                            </td>
+
+
+                            <td>
+
+                                {% if customer.segment == "Champions" %}
+
+                                    <span class="badge champions">
+                                        {{ customer.segment }}
+                                    </span>
+
+                                {% elif customer.segment == "Loyal Customers" %}
+
+                                    <span class="badge loyal">
+                                        {{ customer.segment }}
+                                    </span>
+
+                                {% elif customer.segment == "Potential Loyalists" %}
+
+                                    <span class="badge potential">
+                                        {{ customer.segment }}
+                                    </span>
+
+                                {% elif customer.segment == "At Risk" %}
+
+                                    <span class="badge risk">
+                                        {{ customer.segment }}
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="badge attention">
+                                        {{ customer.segment }}
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                        </tr>
+
+                        {% empty %}
+
+                        <tr>
+
+                            <td colspan="9">
+                                No customer data available.
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             RFM METHODOLOGY
+        ================================================= -->
+
+        <section class="panel methodology">
+
+            <h3>
+                RFM Methodology
+            </h3>
+
+            <p>
+
+                <strong>Recency:</strong>
+
+                measures the relative time since a customer's
+                most recent observed order. Higher recency
+                scores represent more recent purchasing activity.
+
+            </p>
+
+
+            <p>
+
+                <strong>Frequency:</strong>
+
+                measures the number of orders placed by a
+                customer. Higher frequency indicates stronger
+                purchasing engagement.
+
+            </p>
+
+
+            <p>
+
+                <strong>Monetary:</strong>
+
+                represents the customer's purchasing value,
+                calculated from accumulated order size.
+
+            </p>
+
+
+            <p>
+
+                Each RFM dimension is scored from
+                <strong>1 to 5</strong> using customer
+                percentile positions. The three scores are
+                combined to produce an overall RFM score
+                ranging from <strong>3 to 15</strong>.
+
+            </p>
+
+        </section>
+
+
+        <!-- =================================================
+             STRATEGIC INTERPRETATION
+        ================================================= -->
+
+        <section class="panel methodology">
+
+            <h3>
+                Strategic Interpretation
+            </h3>
+
+
+            <p>
+
+                <strong>Champions:</strong>
+
+                High-value and highly engaged customers.
+                They should be retained through loyalty
+                rewards, personalised offers and exclusive
+                promotions.
+
+            </p>
+
+
+            <p>
+
+                <strong>Loyal Customers:</strong>
+
+                Customers demonstrating consistent purchasing
+                behaviour. Cross-selling, upselling and
+                loyalty programmes can increase their value.
+
+            </p>
+
+
+            <p>
+
+                <strong>Potential Loyalists:</strong>
+
+                Customers showing developing engagement.
+                Targeted offers and personalised communication
+                can encourage repeat purchasing.
+
+            </p>
+
+
+            <p>
+
+                <strong>At Risk:</strong>
+
+                Customers whose purchasing behaviour indicates
+                declining engagement. Win-back campaigns and
+                targeted incentives should be prioritised.
+
+            </p>
+
+
+            <p>
+
+                <strong>Needs Attention:</strong>
+
+                Lower-engagement customers requiring targeted
+                interventions before significant marketing
+                resources are committed.
+
+            </p>
+
+        </section>
+
+
+        <div class="footer-note">
+
+            Instacart Customer Intelligence Platform
+
+            &nbsp;|&nbsp;
+
+            RFM Customer Segmentation
+
+        </div>
+
+    </main>
+
+
+    <!-- =====================================================
+         JAVASCRIPT / CHARTS
+    ===================================================== -->
+
+ <script>
+
+    /* =====================================================
+       DATA FROM DJANGO
+    ===================================================== */
+
+    const segmentData = [
+        {% for segment in segment_data %}
+        {
+            label: "{{ segment.segment|escapejs }}",
+            value: {{ segment.count }}
+        },
+        {% endfor %}
+    ];
+
+
+    const scoreData = [
+        {% for score in score_distribution %}
+        {
+            score: {{ score.rfm_score }},
+            value: {{ score.count }}
+        },
+        {% endfor %}
+    ];
+
+
+    /* =====================================================
+       SEGMENT DISTRIBUTION CHART
+    ===================================================== */
+
+    const segmentCanvas =
+        document.getElementById("segmentChart");
+
+
+    if (segmentCanvas) {
+
+        new Chart(
+            segmentCanvas,
+            {
+                type: "doughnut",
+
+                data: {
+
+                    labels: segmentData.map(
+                        item => item.label
+                    ),
+
+                    datasets: [
+                        {
+                            data: segmentData.map(
+                                item => item.value
+                            ),
+
+                            borderWidth: 2,
+
+                            hoverOffset: 8
+                        }
+                    ]
+                },
+
+
+                options: {
+
+                    responsive: true,
+
+                    maintainAspectRatio: false,
+
+
+                    cutout: "62%",
+
+
+                    plugins: {
+
+                        legend: {
+
+                            position: "bottom",
+
+                            labels: {
+
+                                padding: 18,
+
+                                usePointStyle: true,
+
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+
+
+                        tooltip: {
+
+                            callbacks: {
+
+                                label: function(context) {
+
+                                    const total =
+                                        context.dataset.data
+                                            .reduce(
+                                                (sum, value) =>
+                                                    sum + value,
+                                                0
+                                            );
+
+                                    const value =
+                                        context.raw;
+
+                                    const percentage =
+                                        ((value / total) * 100)
+                                            .toFixed(1);
+
+                                    return (
+                                        " " +
+                                        context.label +
+                                        ": " +
+                                        value +
+                                        " customers (" +
+                                        percentage +
+                                        "%)"
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        );
+    }
+
+
+    /* =====================================================
+       RFM SCORE DISTRIBUTION CHART
+    ===================================================== */
+
+    const scoreCanvas =
+        document.getElementById("scoreChart");
+
+
+    if (scoreCanvas) {
+
+        new Chart(
+            scoreCanvas,
+            {
+                type: "bar",
+
+                data: {
+
+                    labels: scoreData.map(
+                        item => item.score
+                    ),
+
+                    datasets: [
+                        {
+                            label: "Customers",
+
+                            data: scoreData.map(
+                                item => item.value
+                            ),
+
+                            borderRadius: 6,
+
+                            borderSkipped: false
+                        }
+                    ]
+                },
+
+
+                options: {
+
+                    responsive: true,
+
+                    maintainAspectRatio: false,
+
+
+                    interaction: {
+
+                        intersect: false,
+
+                        mode: "index"
+                    },
+
+
+                    scales: {
+
+                        x: {
+
+                            title: {
+
+                                display: true,
+
+                                text:
+                                    "Combined RFM Score"
+                            },
+
+                            grid: {
+
+                                display: false
+                            }
+                        },
+
+
+                        y: {
+
+                            beginAtZero: true,
+
+                            title: {
+
+                                display: true,
+
+                                text:
+                                    "Number of Customers"
+                            },
+
+                            ticks: {
+
+                                precision: 0
+                            }
+                        }
+                    },
+
+
+                    plugins: {
+
+                        legend: {
+
+                            display: false
+                        },
+
+
+                        tooltip: {
+
+                            callbacks: {
+
+                                label: function(context) {
+
+                                    return (
+                                        " Customers: " +
+                                        context.raw
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        );
+    }
+
+</script>
+
+</body>
+
+</html>

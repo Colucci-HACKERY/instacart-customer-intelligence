@@ -1,0 +1,86 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Retention Intelligence | Instacart</title>
+    <link rel="stylesheet" href="{% static 'dashboard/theme.css' %}">
+</head>
+<body>
+{% include "dashboard/navbar.html" %}
+<main>
+    <header class="product-hero">
+        <div><p class="eyebrow">CUSTOMER RETENTION INTELLIGENCE</p><h1>Understand the rhythm of return.</h1><p class="muted">Explore recorded purchasing cadence across historical order sequences. These patterns describe completed purchases, not current inactivity or predicted churn.</p></div>
+        <span class="source-pill">Historical cadence{% if snapshot %} &middot; v{{ snapshot.format_version }}{% endif %}</span>
+    </header>
+    <nav class="product-subnav" aria-label="Retention sections"><a href="#gaps">Purchase gaps</a><a href="#customers">Customer cadence</a><a href="#methodology">Definitions &amp; coverage</a></nav>
+    {% if artifact_error %}<section class="panel empty" role="status"><h2>Cadence data is not ready.</h2><p>{{ artifact_error }}</p><p>Existing customer, product and basket dashboards remain available.</p></section>{% endif %}
+    {% if snapshot %}
+    <section class="product-metrics" aria-label="Completed historical gaps">
+        <article class="metric"><h3>Valid completed gaps</h3><strong>{{ snapshot.valid_gaps|floatformat:"0g" }}</strong><span class="metric-foot">{{ snapshot.customers_with_gaps|floatformat:"0g" }} customers with recorded gaps</span></article>
+        <article class="metric"><h3>Mean recorded gap</h3><strong>{% if snapshot.mean_gap != None %}{{ snapshot.mean_gap|floatformat:2 }} days{% else %}Unknown{% endif %}</strong><span class="metric-foot">Median {% if snapshot.median_gap != None %}{{ snapshot.median_gap|floatformat:"-1" }} days{% else %}unknown{% endif %}; recorded values capped at 30</span></article>
+        <article class="metric"><h3>Completed gaps within 7 days</h3><strong>{% if snapshot.share7 != None %}{{ snapshot.share7|floatformat:2 }}%{% else %}Unknown{% endif %}</strong><span class="metric-foot">{{ snapshot.within7|floatformat:"0g" }} / {{ snapshot.valid_gaps|floatformat:"0g" }} valid gaps</span></article>
+        <article class="metric"><h3>Completed gaps within 14 days</h3><strong>{% if snapshot.share14 != None %}{{ snapshot.share14|floatformat:2 }}%{% else %}Unknown{% endif %}</strong><span class="metric-foot">{{ snapshot.within14|floatformat:"0g" }} / {{ snapshot.valid_gaps|floatformat:"0g" }} valid gaps</span></article>
+    </section>
+    <p class="method-note">The denominator is valid, recorded non-first-order gaps in valid customer sequences. Shares include same-day gaps. They are not 7-day or 14-day retention rates.</p>
+    <section id="gaps" class="product-grid" aria-label="Historical gap distribution and coverage">
+        <section class="panel product-panel"><div class="section-top"><h2>Between completed purchases.</h2><span class="source-pill">30+ shown separately</span></div><p class="method-note">All valid gaps are included once; source customer means are not averaged together.</p>
+            {% for bucket in gap_buckets %}<div class="chart-row"><div class="chart-row-label"><span>{{ bucket.label }}</span><strong>{{ bucket.count|floatformat:"0g" }} <span class="muted">({{ bucket.share|floatformat:1 }}%)</span></strong></div><div class="chart-track" aria-hidden="true"><div class="chart-fill" style="width:{{ bucket.bar_width|floatformat:'2u' }}%"></div></div></div>{% endfor %}
+            <p class="method-note">{{ snapshot.capped_gaps|floatformat:"0g" }} gaps are recorded as 30 and represent 30 or more days. Means and medians describe the capped observations; they are not exact uncapped elapsed time.</p>
+        </section>
+        <section class="panel product-panel"><h2>Know the sample.</h2>
+            <dl class="retention-coverage">
+                <div><dt>Original order metadata rows</dt><dd>{{ snapshot.source_rows|floatformat:"0g" }}</dd></div>
+                <div><dt>Source customers</dt><dd>{{ snapshot.source_customers|floatformat:"0g" }}</dd></div>
+                <div><dt>Customers with valid sequences</dt><dd>{{ snapshot.valid_sequence_customers|floatformat:"0g" }}</dd></div>
+                <div><dt>Invalid-sequence customers excluded</dt><dd>{{ snapshot.invalid_sequence_customers|floatformat:"0g" }}</dd></div>
+                <div><dt>First orders excluded from gaps</dt><dd>{{ snapshot.first_orders_excluded|floatformat:"0g" }}</dd></div>
+                <div><dt>Eligible non-first-order gap slots</dt><dd>{{ snapshot.eligible_gap_slots|floatformat:"0g" }}</dd></div>
+                <div><dt>Missing / invalid gaps excluded</dt><dd>{{ snapshot.missing_gaps|floatformat:"0g" }} / {{ snapshot.invalid_gaps|floatformat:"0g" }}</dd></div>
+            </dl>
+            <p class="method-note">Scope includes all supplied order metadata: prior {{ snapshot.eval_sets.prior|default:0|floatformat:"0g" }}, train {{ snapshot.eval_sets.train|default:0|floatformat:"0g" }} and test {{ snapshot.eval_sets.test|default:0|floatformat:"0g" }}. Train/test order contents are not required to observe their recorded preceding gap.</p>
+            <p class="method-note">Current RFM coverage: {{ matched_customers|floatformat:"0g" }} source customers matched; {{ source_without_rfm|floatformat:"0g" }} source customers without an RFM record; {{ rfm_without_source|floatformat:"0g" }} RFM customers absent from this source.</p>
+        </section>
+    </section>
+    {% if snapshot.invalid_sequence_customers or snapshot.unexpected_first_gaps %}<p class="notice" role="status">Source quality: {{ snapshot.excluded_sequence_rows|floatformat:"0g" }} rows belong to invalid customer sequences and do not contribute gap metrics. {{ snapshot.unexpected_first_gaps|floatformat:"0g" }} first orders have an unexpected gap value; first-order gaps are always excluded.</p>{% endif %}
+    {% endif %}
+    <section class="panel product-panel" id="customers" aria-labelledby="cadence-heading">
+        <div class="section-top"><div><p class="eyebrow">CUSTOMER CADENCE EXPLORER</p><h2 id="cadence-heading">A closer look at the pattern.</h2></div><a class="button secondary" href="{% url 'retention_intelligence' %}#customers">Reset filters</a></div>
+        <form class="product-filter retention-filter" method="get" action="{% url 'retention_intelligence' %}#customers">
+            <div class="field">{{ retention_form.user_id.label_tag }}{{ retention_form.user_id }}</div>
+            <div class="field"><label for="retention-segment">Existing RFM segment</label><select id="retention-segment" name="segment"><option value="">All segments</option>{% for segment in segments %}<option value="{{ segment }}"{% if selected_segment == segment %} selected{% endif %}>{{ segment }}</option>{% endfor %}</select></div>
+            <div class="field">{{ retention_form.comparison.label_tag }}{{ retention_form.comparison }}</div>
+            <div class="field">{{ retention_form.sort.label_tag }}{{ retention_form.sort }}</div>
+            <button type="submit">Explore customers</button>
+        </form>
+        {% if retention_form.errors %}<div class="notice" role="alert">Check your cadence filters. {{ retention_form.errors }}</div>{% endif %}
+        <p class="method-note">{{ cadence_page.paginator.count|floatformat:"0g" }} matching source customers. Filters apply to this directory; summary cards and charts describe the full source snapshot. RFM segments are existing classifications, not validated retention outcomes.</p>
+        <p class="notice"><strong>A latest completed gap ends with a subsequent purchase.</strong> A longer historical gap cannot establish current inactivity. Comparisons require at least two valid earlier gaps and an uncapped latest gap; if either side includes a 30+ observation, no direction is assigned.</p>
+        <div class="product-table retention-table" tabindex="0" role="region" aria-label="Historical customer cadence records"><table>
+            <thead><tr><th scope="col">Customer</th><th scope="col">Existing segment</th><th scope="col">Observed orders</th><th scope="col">Valid gaps</th><th scope="col">Mean / median</th><th scope="col">Latest completed gap</th><th scope="col">Earlier recorded mean</th><th scope="col">Descriptive comparison</th></tr></thead>
+            <tbody>{% for customer in cadence_page %}<tr>
+                <td><a href="{% url 'customer_explorer' %}?user_id={{ customer.user_id }}#profile">#{{ customer.user_id }}</a></td>
+                <td>{% if customer.segment %}{% include "dashboard/segment_badge.html" with segment=customer.segment %}{% else %}No RFM record{% endif %}</td>
+                <td>{{ customer.source_orders }}<span class="rank-category">{% if customer.sequence_valid %}Sequence 1&ndash;{{ customer.latest_number }}{% else %}Invalid sequence{% endif %}</span></td>
+                <td>{% if customer.sequence_valid %}{{ customer.gap_n }}<span class="rank-category">{{ customer.missing_gaps }} missing / {{ customer.invalid_gaps }} invalid</span>{% else %}Excluded<span class="rank-category">Sequence quality issue</span>{% endif %}</td>
+                <td>{% if customer.mean_gap != None %}{{ customer.mean_gap|floatformat:2 }} / {{ customer.median_gap|floatformat:"-1" }} days{% else %}Unknown{% endif %}<span class="rank-category">{{ customer.capped_gaps }} capped observations</span></td>
+                <td>{% if customer.latest_gap == 30 %}30+ days{% elif customer.latest_gap != None %}{{ customer.latest_gap }} days{% else %}Unavailable{% endif %}<span class="rank-category">{% if customer.latest_number %}At order #{{ customer.latest_number }} ({{ customer.latest_eval_set }}){% endif %}</span></td>
+                <td>{% if customer.earlier_mean != None %}{{ customer.earlier_mean|floatformat:2 }} days{% else %}Unavailable{% endif %}<span class="rank-category">{{ customer.earlier_n }} valid earlier gaps</span></td>
+                <td>{{ customer.comparison_label }}{% if customer.share7 != None %}<span class="rank-category">Within 7 / 14 days: {{ customer.share7|floatformat:1 }}% / {{ customer.share14|floatformat:1 }}%</span>{% endif %}</td>
+            </tr>{% empty %}<tr><td colspan="8" class="empty">No customer cadence records match these controls. Check the Customer ID, broaden the filters or build the cadence artifact if unavailable.</td></tr>{% endfor %}</tbody>
+        </table></div>
+        {% if cadence_page.paginator.count %}<nav class="product-pagination" aria-label="Customer cadence pagination"><span>Showing {{ cadence_page.start_index }}&ndash;{{ cadence_page.end_index }} of {{ cadence_page.paginator.count|floatformat:"0g" }} &middot; Page {{ cadence_page.number }} of {{ cadence_page.paginator.num_pages }}</span><div>{% if cadence_page.has_previous %}<a href="{% querystring page=1 %}#customers">First</a><a href="{% querystring page=cadence_page.previous_page_number %}#customers" rel="prev">Previous</a>{% endif %}{% if cadence_page.has_next %}<a href="{% querystring page=cadence_page.next_page_number %}#customers" rel="next">Next</a><a href="{% querystring page=cadence_page.paginator.num_pages %}#customers">Last</a>{% endif %}</div></nav>{% endif %}
+    </section>
+    <section class="panel method-note" id="methodology"><h2>Historical behaviour, with clear limits.</h2>
+        <div class="basket-definitions">
+            <article><h3>Sequence comes from order_number.</h3><p>Original source orders are ordered within each customer by <code>order_number</code>. Order IDs identify records; their numerical value never establishes chronology. Duplicate, missing or invalid sequence numbers quarantine that customer's entire sequence from gap metrics.</p></article>
+            <article><h3>Measure completed gaps.</h3><p>Mean and median use valid integer observations from 0 to 30 for orders after the first. Zero is a same-day gap. Missing, negative, nonfinite, fractional or out-of-range gaps are excluded, with their counts shown. 30 means 30+; capped averages are lower bounds on uncapped averages.</p></article>
+            <article><h3>Do not infer current churn.</h3><p>No calendar dates, common observation cutoff or post-final-order follow-up are available. Day-of-week and hour fields cannot supply dates. Neither these gaps nor stored RFM recency establish current inactivity, churn probability, calendar cohort retention or customer lifetime value.</p></article>
+        </div>
+        <details><summary>Scope, comparisons and preservation</summary><p>Shares within 7 and 14 days divide qualifying completed gaps by all valid recorded completed gaps, not by customers or eligible gap slots. Missing observations may affect representativeness. Earlier means use available valid non-first-order gaps strictly before the highest order_number; latest gaps are never substituted with an earlier observation when unavailable. A directional comparison uses only uncapped observations and requires at least two earlier valid gaps. These are descriptions, not risk scores or predictions.</p><p>Original orders.csv includes first orders and final train/test order metadata. The existing processed customer dataset drops first orders; Product and Basket Intelligence use prior-order contents. These populations are not interchangeable. The dataset contains selected observed customer histories and does not establish a representative business retention rate. No transaction dates, prices, revenue or profit are inferred.</p><p>The streaming builder writes only a separate versioned cadence artifact. Existing orders, RFM scores and segments, product summaries and basket snapshots are not recalculated or modified. Current RFM labels are joined read-only at request time. Rebuild explicitly when the original source changes.</p></details>
+    </section>
+    {% if snapshot %}<p class="snapshot-note">Source: {{ snapshot.source_name }} &middot; Built {{ snapshot.built_at }} &middot; Artifact format v{{ snapshot.format_version }} &middot; Historical recorded purchasing cadence.</p>{% endif %}
+</main>
+</body>
+</html>

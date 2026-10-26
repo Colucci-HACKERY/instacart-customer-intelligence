@@ -1,0 +1,30 @@
+<nav class="navbar" aria-label="Main navigation">
+    <div class="navbar-container">
+        <a href="{% url 'home' %}" class="brand">
+            <span class="brand-mark" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 9h16l-2 11H6L4 9Z"/><path d="m8 9 4-6 4 6M9 13v3m6-3v3"/></svg></span>
+            <span>Instacart<small>Intelligence platform</small></span>
+        </a>
+        <p class="nav-label">Workspace</p>
+        <div class="nav-links">
+            <a href="{% url 'home' %}" class="nav-link"{% if request.resolver_match.url_name == 'home' %} aria-current="page"{% endif %}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Overview
+            </a>
+            <a href="{% url 'rfm_dashboard' %}" class="nav-link"{% if request.resolver_match.url_name == 'rfm_dashboard' %} aria-current="page"{% endif %}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 20V10m8 10V4m8 16v-7" stroke-linecap="round"/></svg>RFM Analysis
+            </a>
+            <a href="{% url 'customer_explorer' %}" class="nav-link"{% if request.resolver_match.url_name == 'customer_explorer' %} aria-current="page"{% endif %}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2m2-15a3 3 0 0 1 0 6m1 3a5 5 0 0 1 3 4v2"/></svg>Customer Explorer
+            </a>
+            <a href="{% url 'product_intelligence' %}" class="nav-link"{% if request.resolver_match.url_name == 'product_intelligence' %} aria-current="page"{% endif %}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m12 3 9 5v9l-9 5-9-5V8l9-5Zm0 9v10M3 8l9 4 9-4M7 5.8l9 4.4"/></svg>Product Intelligence
+            </a>
+            <a href="{% url 'basket_intelligence' %}" class="nav-link"{% if request.resolver_match.url_name == 'basket_intelligence' %} aria-current="page"{% endif %}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 9h18l-2 11H5L3 9Zm4 0 5-6 5 6M9 13v3m6-3v3"/></svg>Basket &amp; Reorder
+            </a>
+            <a href="{% url 'retention_intelligence' %}" class="nav-link"{% if request.resolver_match.url_name == 'retention_intelligence' %} aria-current="page"{% endif %}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2-5M4 4v5h5M12 8v5l3 2"/></svg>Customer Retention
+            </a>
+        </div>
+        <div class="nav-footer"><strong>From baskets to better decisions.</strong>Instacart research dataset<br>Customer &amp; product insights</div>
+    </div>
+</nav>

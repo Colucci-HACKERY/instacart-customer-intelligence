@@ -1,0 +1,36 @@
+﻿# Python environments and generated files
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+
+# Secrets and local databases
+.env
+.env.*
+!.env.example
+*.sqlite3
+*.sqlite3-*
+*.db
+
+# Local data, analytics artifacts and audits
+data/
+artifacts/
+audit/
+
+# Collected static files and uploaded media
+staticfiles/
+media/
+
+# Backups and editor files
+*.bak
+*.bak.*
+*_backup.py
+*_backup.html
+.vscode/
+.idea/
+.git/
+
+# Local operating-system files
+.DS_Store
+Thumbs.db

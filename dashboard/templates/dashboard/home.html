@@ -1,0 +1,475 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{{ title }}</title>
+
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
+    <style>
+        .navbar {
+    width: 100%;
+    background: #111827;
+    border-bottom: 1px solid #374151;
+}
+
+.navbar-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 16px 24px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.brand {
+    color: white;
+    text-decoration: none;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.nav-links {
+    display: flex;
+    gap: 10px;
+}
+
+.nav-link {
+    color: #d1d5db;
+    text-decoration: none;
+
+    padding: 9px 16px;
+    border-radius: 8px;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    transition: 0.2s;
+}
+
+.nav-link:hover {
+    background: #374151;
+    color: white;
+}
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            color: #1f2937;
+        }
+
+        header {
+            background: #111827;
+            color: white;
+            padding: 30px 50px;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 30px;
+        }
+
+        header p {
+            color: #d1d5db;
+            margin-bottom: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 25px;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns:
+                repeat(3, 1fr);
+
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+
+            box-shadow:
+                0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .card h3 {
+            margin-top: 0;
+            color: #6b7280;
+            font-size: 15px;
+        }
+
+        .number {
+            font-size: 30px;
+            font-weight: bold;
+        }
+
+        .section {
+            margin-top: 40px;
+        }
+
+        .analytics-grid {
+            display: grid;
+            grid-template-columns:
+                repeat(2, 1fr);
+
+            gap: 20px;
+        }
+
+        .analytics-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+
+            box-shadow:
+                0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .analytics-card h3 {
+            margin-top: 0;
+        }
+
+        .dataset-info {
+            margin-top: 40px;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+
+            box-shadow:
+                0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        @media (max-width: 800px) {
+
+            .cards {
+                grid-template-columns: 1fr;
+            }
+
+            .analytics-grid {
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+    </style>
+
+    <link rel="stylesheet" href="{% static 'dashboard/theme.css' %}">
+</head>
+
+
+<body>
+    {% include "dashboard/navbar.html" %}
+
+
+<header>
+
+    <p class="eyebrow">CUSTOMER INTELLIGENCE</p>
+    <h1>Your customers, in focus.</h1>
+
+    <p>
+        Instacart customer and purchasing behaviour analytics
+    </p>
+
+</header>
+
+
+<div class="container">
+
+
+    <h2>Dataset Overview</h2>
+
+
+    <div class="cards">
+
+
+        <div class="card">
+
+            <h3>Unique Customers</h3>
+
+            <div class="number">
+                {{ customers|floatformat:0 }}
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>Unique Orders</h3>
+
+            <div class="number">
+                {{ orders|floatformat:0 }}
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <h3>Dataset Rows</h3>
+
+            <div class="number">
+                {{ rows|floatformat:0 }}
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+    <div class="section">
+
+    <h2>Order Behaviour</h2>
+
+    <div class="analytics-grid">
+
+        <div class="analytics-card">
+
+            <h3>Orders by Day of Week</h3>
+
+            <div id="ordersByDay"></div>
+
+        </div>
+
+
+        <div class="analytics-card">
+
+            <h3>Order Size Distribution</h3>
+
+            <div id="orderSize"></div>
+
+        </div>
+
+
+        <div class="analytics-card">
+
+            <h3>Reorder Interval</h3>
+
+            <div id="reorderInterval"></div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+    <div class="section">
+
+        <h2>Analytics Modules</h2>
+
+
+        <div class="analytics-grid">
+
+
+            <div class="analytics-card">
+
+                <h3>Customer Analytics</h3>
+
+                <p>
+                    Analyse customer purchasing behaviour,
+                    order frequency and reorder patterns.
+                </p>
+
+            </div>
+
+
+            <div class="analytics-card">
+
+                <h3>RFM Analysis</h3>
+
+                <p>
+                    Segment customers based on purchasing
+                    behaviour and engagement.
+                </p>
+
+            </div>
+
+
+            <div class="analytics-card">
+
+                <h3><a href="{% url 'product_intelligence' %}">Product Intelligence &rarr;</a></h3>
+
+                <p>
+                    Identify popular products, aisles
+                    and departments.
+                </p>
+
+            </div>
+
+
+            <div class="analytics-card">
+
+                <h3>Order Analytics</h3>
+
+                <p>
+                    Analyse order size, ordering days
+                    and purchasing intervals.
+                </p>
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+
+    <div class="dataset-info">
+
+        <h3>Data Source</h3>
+
+        <p>
+            Processed Instacart dataset:
+            <strong>t05_engineered_data.csv</strong>
+        </p>
+
+        <p>
+            The dashboard is currently connected directly
+            to the processed analytical dataset.
+        </p>
+
+    </div>
+
+
+</div>
+
+<script>
+
+    // -----------------------------------------
+    // Orders by Day of Week
+    // -----------------------------------------
+
+    const ordersByDay =
+        {{ orders_by_day|safe }};
+
+    const dayLabels =
+        Object.keys(ordersByDay);
+
+    const dayValues =
+        Object.values(ordersByDay);
+
+
+    Plotly.newPlot(
+        "ordersByDay",
+        [
+            {
+                x: dayLabels,
+                y: dayValues,
+                type: "bar"
+            }
+        ],
+        {
+            colorway: ["#398464"], paper_bgcolor: "transparent", plot_bgcolor: "transparent", font: {family: "Segoe UI, Arial", color: "#667875", size: 11},
+            margin: {
+                t: 20,
+                r: 20,
+                b: 60,
+                l: 60
+            }
+        }
+    );
+
+
+    // -----------------------------------------
+    // Order Size Distribution
+    // -----------------------------------------
+
+    const orderSize =
+        {{ order_size_distribution|safe }};
+
+    const sizeLabels =
+        Object.keys(orderSize);
+
+    const sizeValues =
+        Object.values(orderSize);
+
+
+    Plotly.newPlot(
+        "orderSize",
+        [
+            {
+                x: sizeLabels,
+                y: sizeValues,
+                type: "bar"
+            }
+        ],
+        {
+            xaxis: {
+                title: "Products per Order"
+            },
+
+            yaxis: {
+                title: "Number of Orders"
+            },
+
+            colorway: ["#398464"], paper_bgcolor: "transparent", plot_bgcolor: "transparent", font: {family: "Segoe UI, Arial", color: "#667875", size: 11},
+            margin: {
+                t: 20,
+                r: 20,
+                b: 60,
+                l: 60
+            }
+        }
+    );
+
+
+    // -----------------------------------------
+    // Reorder Interval
+    // -----------------------------------------
+
+    const reorderInterval =
+        {{ reorder_interval|safe }};
+
+    const intervalLabels =
+        Object.keys(reorderInterval);
+
+    const intervalValues =
+        Object.values(reorderInterval);
+
+
+    Plotly.newPlot(
+        "reorderInterval",
+        [
+            {
+                x: intervalLabels,
+                y: intervalValues,
+                type: "bar"
+            }
+        ],
+        {
+            xaxis: {
+                title: "Days Since Previous Order"
+            },
+
+            yaxis: {
+                title: "Number of Orders"
+            },
+
+            colorway: ["#398464"], paper_bgcolor: "transparent", plot_bgcolor: "transparent", font: {family: "Segoe UI, Arial", color: "#667875", size: 11},
+            margin: {
+                t: 20,
+                r: 20,
+                b: 60,
+                l: 60
+            }
+        }
+    );
+
+</script>
+</body>
+
+</html>

@@ -1,0 +1,52 @@
+# Python virtual environments
+.venv/
+venv/
+env/
+
+# Python generated files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Django local configuration and secrets
+.env
+.env.*
+!.env.example
+db.sqlite3
+db.sqlite3-*
+*.sqlite3
+*.sqlite3-*
+*.db
+
+# Local analytics data and audit artefacts
+artifacts/
+audit/
+
+# Django collected and uploaded files
+staticfiles/
+media/
+
+# Logs and test outputs
+*.log
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Editors and operating systems
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Private keys and certificates
+*.pem
+*.key
+
+# Local backup copies — do not publish
+*.bak
+*.bak.*
+*_backup.py
+*_backup.html
+
+# Additional local virtual environments
+venv/

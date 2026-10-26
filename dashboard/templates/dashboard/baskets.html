@@ -1,0 +1,77 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basket &amp; Reorder Intelligence | Instacart</title>
+    <link rel="stylesheet" href="{% static 'dashboard/theme.css' %}">
+</head>
+<body>
+{% include "dashboard/navbar.html" %}
+<main>
+    <header class="product-hero">
+        <div><p class="eyebrow">BASKET &amp; REORDER INTELLIGENCE</p><h1>See what belongs together.</h1><p class="muted">Understand basket composition, observed reorders and product combinations in the original prior-order dataset.</p></div>
+        <span class="source-pill">{% if snapshot %}Exact frequent-pair snapshot{% else %}Awaiting basket build{% endif %}</span>
+    </header>
+    <nav class="product-subnav" aria-label="Basket sections"><a href="#composition">Basket composition</a><a href="#pairs">Product pairs</a><a href="#definitions">Metric guide</a></nav>
+    {% if not snapshot %}
+    <section class="panel empty"><h2>Ready to connect the basket.</h2><p>Build the basket snapshot from the original prior order-product CSV to populate distributions, reorder metrics and frequent pairs. Existing dashboards and records remain available.</p></section>
+    {% else %}
+    {% if catalog_refreshed %}<p class="notice" role="status">The product catalog was refreshed after this basket snapshot. Pair counts retain their original source coverage; names and category filters use the current catalog. Rebuild basket analytics to confirm they are aligned.</p>{% endif %}
+    <section class="product-metrics" aria-label="Basket summary">
+        <article class="metric"><h3>Nonempty prior baskets</h3><strong>{{ snapshot.order_count|floatformat:"0g" }}</strong><span class="metric-foot">All distinct source order IDs</span></article>
+        <article class="metric"><h3>Products per basket</h3><strong>{{ snapshot.average_products|floatformat:2 }}</strong><span class="metric-foot">Mean distinct products; median {{ median_products|floatformat:"-1" }}</span></article>
+        <article class="metric"><h3>Observed reorder rate</h3><strong>{% if snapshot.reorder_rate != None %}{{ snapshot.reorder_rate|floatformat:2 }}%{% else %}Unknown{% endif %}</strong><span class="metric-foot">{{ snapshot.reorder_count|floatformat:"0g" }} / {{ snapshot.valid_reorder_count|floatformat:"0g" }} valid rows</span></article>
+        <article class="metric"><h3>Frequent product pairs</h3><strong>{{ snapshot.pair_count|floatformat:"0g" }}</strong><span class="metric-foot">At least {{ snapshot.support_floor|floatformat:"0g" }} distinct co-orders</span></article>
+    </section>
+    <p class="method-note">Prior-order population only; it differs from the processed customer dashboards. Basket size and pair metrics use distinct products. Reorder rates use source rows with a valid indicator.</p>
+    <section id="composition" class="product-grid" aria-label="Basket composition and reorder behaviour">
+        <section class="panel product-panel"><div class="section-top"><h2>How full is the basket?</h2><span class="source-pill">Distinct products</span></div><p class="method-note">Each order belongs to one size band. Shares use all {{ snapshot.order_count|floatformat:"0g" }} nonempty baskets.</p>
+            {% for bucket in composition_bins %}<div class="chart-row"><div class="chart-row-label"><span>{{ bucket.label }}</span><strong>{{ bucket.orders|floatformat:"0g" }} <span class="muted">({{ bucket.share|floatformat:1 }}%)</span></strong></div><div class="chart-track" aria-hidden="true"><div class="chart-fill" style="width:{{ bucket.bar_width|floatformat:'2u' }}%"></div></div></div>{% endfor %}
+            <p class="method-note">{{ snapshot.memberships|floatformat:"0g" }} distinct order-product memberships across {{ snapshot.occurrences|floatformat:"0g" }} source rows. Repeated rows count once for basket size and pair membership.</p>
+        </section>
+        <section class="panel product-panel"><h2>Reorders by basket size</h2><p class="method-note">A row is a reorder only when <code>reordered = 1</code>. The denominator is rows marked exactly 0 or 1 in that size band.</p>
+            <div class="basket-table" tabindex="0" role="region" aria-label="Reorder rates by basket size"><table><thead><tr><th scope="col">Basket size</th><th scope="col">Reordered rows</th><th scope="col">Valid rows</th><th scope="col">Rate</th></tr></thead><tbody>{% for bucket in composition_bins %}<tr><td>{{ bucket.label }}</td><td>{{ bucket.reorders|floatformat:"0g" }}</td><td>{{ bucket.valid|floatformat:"0g" }}</td><td>{% if bucket.reorder_rate != None %}{{ bucket.reorder_rate|floatformat:1 }}%{% else %}Unknown{% endif %}</td></tr>{% endfor %}</tbody></table></div>
+            <p class="method-note">{{ snapshot.unknown_reorders|floatformat:"0g" }} missing or invalid indicators are excluded. This is an occurrence-level rate, not a customer's probability of returning.</p>
+        </section>
+    </section>
+    {% endif %}
+    <section class="panel product-panel" id="pairs" aria-labelledby="pairs-heading">
+        <div class="section-top"><div><p class="eyebrow">MARKET BASKET ANALYSIS</p><h2 id="pairs-heading">Frequently found together.</h2></div><a class="button secondary" href="{% url 'basket_intelligence' %}#pairs">Reset filters</a></div>
+        {% if snapshot %}<p class="method-note">Build floor: {{ snapshot.support_floor|floatformat:"0g" }} co-orders ({{ snapshot.support_floor_pct|floatformat:5 }}% of all baskets). Raise either support control to narrow the results. Results below this floor require a new build.</p>{% endif %}
+        <form class="product-filter basket-filter" method="get" action="{% url 'basket_intelligence' %}#pairs">
+            <div class="field">{{ pair_form.q.label_tag }}{{ pair_form.q }}</div>
+            <div class="field"><label for="department-filter">Either product's department</label><select id="department-filter" name="department"><option value="">All departments</option>{% for department in departments %}<option value="{{ department.pk }}"{% if selected_department == department.pk|stringformat:"s" %} selected{% endif %}>{{ department.name|capfirst }}</option>{% endfor %}</select></div>
+            <div class="field"><label for="aisle-filter">Either product's aisle</label><select id="aisle-filter" name="aisle"><option value="">All aisles</option>{% for aisle in aisles %}<option value="{{ aisle.pk }}"{% if selected_aisle == aisle.pk|stringformat:"s" %} selected{% endif %}>{{ aisle.name|capfirst }}</option>{% endfor %}</select></div>
+            <div class="field">{{ pair_form.min_support.label_tag }}{{ pair_form.min_support }}</div>
+            <div class="field">{{ pair_form.min_orders.label_tag }}{{ pair_form.min_orders }}</div>
+            <div class="field">{{ pair_form.min_confidence.label_tag }}{{ pair_form.min_confidence }}</div>
+            <div class="field">{{ pair_form.sort.label_tag }}{{ pair_form.sort }}</div>
+            <button type="submit">Explore pairs</button>
+        </form>
+        {% if pair_form.errors %}<div class="notice" role="alert">Check the pair filters. {{ pair_form.errors }}</div>{% endif %}
+        <p class="method-note">{{ pair_page.paginator.count|floatformat:"0g" }} matching pairs. Each unordered pair appears once; A is the lower product ID. Confidence filters accept either direction. Category filters match either member; multiple filters may match different members. Support and lift always use the full source population, even when filters are applied.</p>
+        <div class="product-table basket-pairs" tabindex="0" role="region" aria-label="Frequent product pair rankings"><table>
+            <thead><tr><th scope="col">Product A</th><th scope="col">Product B</th><th scope="col">Co-orders</th><th scope="col">Support</th><th scope="col">Confidence A &rarr; B</th><th scope="col">Confidence B &rarr; A</th><th scope="col">Lift</th></tr></thead>
+            <tbody>{% for pair in pair_page %}<tr>
+                <td class="product-name">{% if pair.product_a %}<a href="{% url 'product_intelligence' %}?q={{ pair.product_a_id }}#directory">{{ pair.product_a.name }}</a><small>{{ pair.product_a.aisle.name|capfirst }} / {{ pair.product_a.department.name|capfirst }}</small>{% else %}Product #{{ pair.product_a_id }}<small>Not in current catalog</small>{% endif %}<small>{{ pair.a_order_count|floatformat:"0g" }} orders contain A</small></td>
+                <td class="product-name">{% if pair.product_b %}<a href="{% url 'product_intelligence' %}?q={{ pair.product_b_id }}#directory">{{ pair.product_b.name }}</a><small>{{ pair.product_b.aisle.name|capfirst }} / {{ pair.product_b.department.name|capfirst }}</small>{% else %}Product #{{ pair.product_b_id }}<small>Not in current catalog</small>{% endif %}<small>{{ pair.b_order_count|floatformat:"0g" }} orders contain B</small></td>
+                <td>{{ pair.order_count|floatformat:"0g" }}</td><td>{{ pair.support|floatformat:4 }}%</td><td>{{ pair.confidence_a|floatformat:2 }}%</td><td>{{ pair.confidence_b|floatformat:2 }}%</td><td><span class="rate-pill">{{ pair.lift|floatformat:3 }}&times;</span></td>
+            </tr>{% empty %}<tr><td colspan="7" class="empty">No pairs match these controls. Try a broader product/category filter or lower the thresholds within the published build floor.</td></tr>{% endfor %}</tbody>
+        </table></div>
+        {% if pair_page.paginator.count %}<nav class="product-pagination" aria-label="Pair pagination"><span>Showing {{ pair_page.start_index }}&ndash;{{ pair_page.end_index }} of {{ pair_page.paginator.count|floatformat:"0g" }} &middot; Page {{ pair_page.number }} of {{ pair_page.paginator.num_pages }}</span><div>{% if pair_page.has_previous %}<a href="{% querystring page=1 %}#pairs">First</a><a href="{% querystring page=pair_page.previous_page_number %}#pairs" rel="prev">Previous</a>{% endif %}{% if pair_page.has_next %}<a href="{% querystring page=pair_page.next_page_number %}#pairs" rel="next">Next</a><a href="{% querystring page=pair_page.paginator.num_pages %}#pairs">Last</a>{% endif %}</div></nav>{% endif %}
+    </section>
+    <section class="panel method-note" id="definitions"><h2>Read the relationship, not a promise.</h2>
+        <div class="basket-definitions">
+            <article><h3>Support</h3><p><code>n(A and B) / N</code>, shown as a percentage. How often both products occur in the same basket, out of all nonempty source baskets.</p></article>
+            <article><h3>Confidence</h3><p><code>n(A and B) / n(A)</code> for A &rarr; B. Among baskets containing A, the share that also contain B. Reverse confidence uses <code>n(B)</code> and can differ.</p></article>
+            <article><h3>Lift</h3><p><code>n(A and B) &times; N / (n(A) &times; n(B))</code>. A value above 1 means more co-occurrence than expected under independence; below 1 means less. Lift is symmetric.</p></article>
+        </div>
+        <p><strong>Association is not causation.</strong> These are observational patterns, not proof that buying one product causes another purchase. Repeated orders from the same customers are not independent trials. Minimum support reduces rare-pair noise; it is not a statistical significance test. Product popularity, promotions and customer preferences may influence the relationships.</p>
+        <details><summary>Source, processing and scope</summary><p>Uses original <code>order_products__prior.csv</code> and verified existing product, aisle and department relationships. Each distinct order-product membership contributes once to basket size and pair counts; duplicate source rows still contribute to the row-level reorder denominator. Every unordered pair above the build floor is counted exactly, without sampling or truncating large baskets. Products below the build support threshold cannot form a qualifying pair and are pruned before pair counting.</p><p>Two streaming passes keep one basket at a time; sparse counters spill to a temporary disk-backed store. The published snapshot is read on requests, so filtering does not rescan the source file. No product-by-product matrix is created. Empty orders cannot be observed in an order-product file and are excluded. Train/test rows are excluded, and order IDs are used for grouping, not chronology. No prices, revenue or profit are inferred.</p><p>Rebuild when source data changes or when a lower pair-support floor is needed. Catalog labels and category filters use the current product catalog; the snapshot's metrics retain their original source population.</p></details>
+    </section>
+    {% if snapshot %}<p class="snapshot-note">Source: {{ snapshot.source_name }} &middot; Built {{ snapshot.imported_at|date:"j M Y, H:i" }} UTC &middot; {{ snapshot.product_count|floatformat:"0g" }} observed products &middot; Support floor {{ snapshot.support_floor|floatformat:"0g" }} baskets.</p>{% endif %}
+</main>
+</body>
+</html>
