@@ -1,10 +1,15 @@
+<a class="skip-link" href="#main-content">Skip to content</a>
 <nav class="navbar" aria-label="Main navigation">
     <div class="navbar-container">
         <a href="{% url 'home' %}" class="brand">
             <span class="brand-mark" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 9h16l-2 11H6L4 9Z"/><path d="m8 9 4-6 4 6M9 13v3m6-3v3"/></svg></span>
             <span>Instacart<small>Intelligence platform</small></span>
         </a>
-        <p class="nav-label">Workspace</p>
+        <div class="workspace-label">
+            <span class="workspace-avatar" aria-hidden="true">I</span>
+            <span>Instacart workspace<small>Customer analytics</small></span>
+        </div>
+        <p class="nav-label">Analytics workspace</p>
         <div class="nav-links">
             <a href="{% url 'home' %}" class="nav-link"{% if request.resolver_match.url_name == 'home' %} aria-current="page"{% endif %}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Overview

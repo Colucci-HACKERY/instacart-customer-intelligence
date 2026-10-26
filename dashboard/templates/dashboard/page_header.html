@@ -1,0 +1,8 @@
+<header class="page-header">
+    <div>
+        <p class="eyebrow">{{ eyebrow }}</p>
+        <h1>{{ heading }}</h1>
+        <p class="page-description">{% if lead %}<strong>{{ lead }}</strong> {% endif %}{{ description }}</p>
+    </div>
+    <span class="source-pill">{% if unavailable and not snapshot %}{{ unavailable }}{% else %}{{ source }}{% endif %}{% if source_version %} &middot; v{{ source_version }}{% endif %}</span>
+</header>

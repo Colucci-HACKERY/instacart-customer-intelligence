@@ -10,373 +10,34 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <style>
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            font-family: "Segoe UI", Arial, sans-serif;
-            background: #f5f7fb;
-            color: #1f2937;
-        }
-
-        /* =====================================================
-           NAVIGATION
-        ===================================================== */
-
-        .navbar {
-            width: 100%;
-            background: #111827;
-            border-bottom: 1px solid #374151;
-        }
-
-        .navbar-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 16px 24px;
-
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .brand {
-            color: white;
-            text-decoration: none;
-            font-size: 20px;
-            font-weight: 700;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 10px;
-        }
-
-        .nav-link {
-            color: #d1d5db;
-            text-decoration: none;
-
-            padding: 9px 16px;
-            border-radius: 8px;
-
-            font-size: 14px;
-            font-weight: 600;
-
-            transition: 0.2s;
-        }
-
-        .nav-link:hover {
-            background: #374151;
-            color: white;
-        }
-
-        /* =====================================================
-           MAIN CONTAINER
-        ===================================================== */
-
-        .container {
-            max-width: 1400px;
-            margin: auto;
-            padding: 30px;
-        }
-
-        .page-title {
-            margin-bottom: 25px;
-        }
-
-        .page-title h2 {
-            margin: 0 0 6px 0;
-            font-size: 30px;
-            color: #172b4d;
-        }
-
-        .page-title p {
-            margin: 0;
-            color: #6b7280;
-            font-size: 15px;
-        }
-
-        /* =====================================================
-           KPI CARDS
-        ===================================================== */
-
-        .cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-            gap: 18px;
-            margin-bottom: 30px;
-        }
-
-        .card {
-            background: white;
-            padding: 22px;
-            border-radius: 12px;
-
-            box-shadow:
-                0 3px 12px rgba(0, 0, 0, 0.06);
-        }
-
-        .card-title {
-            color: #6b7280;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-
-        .card-value {
-            font-size: 28px;
-            font-weight: 700;
-            color: #172b4d;
-        }
-
-        .card-percentage {
-            margin-top: 7px;
-            color: #6b7280;
-            font-size: 13px;
-        }
-
-        .champion-card {
-            border-top: 4px solid #16a34a;
-        }
-
-        .loyal-card {
-            border-top: 4px solid #2563eb;
-        }
-
-        .potential-card {
-            border-top: 4px solid #d97706;
-        }
-
-        .risk-card {
-            border-top: 4px solid #dc2626;
-        }
-
-        .attention-card {
-            border-top: 4px solid #6b7280;
-        }
-
-        /* =====================================================
-           GRID
-        ===================================================== */
-
-        .grid {
-            display: grid;
-            grid-template-columns: 1.2fr 0.8fr;
-            gap: 25px;
-            margin-bottom: 30px;
-        }
-
-        .panel {
-            background: white;
-            border-radius: 12px;
-            padding: 25px;
-
-            box-shadow:
-                0 3px 12px rgba(0, 0, 0, 0.06);
-        }
-
-        .panel h3 {
-            margin-top: 0;
-            margin-bottom: 20px;
-            font-size: 19px;
-            color: #172b4d;
-        }
-
-        .chart-container {
-            height: 350px;
-            position: relative;
-        }
-
-       /* =========================
-   TABLES
-========================= */
-
-.table-container {
-    overflow-x: auto;
-}
-
-/* Compact customer tables */
-.compact-table {
-    max-height: 390px;
-    overflow-y: auto;
-    overflow-x: auto;
-    border-radius: 10px;
-}
-
-/* Keep table header visible while scrolling */
-.compact-table thead th {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    background: #f9fafb;
-}
-
-/* Smaller rows for long customer tables */
-.compact-table th,
-.compact-table td {
-    padding: 10px 12px;
-    font-size: 13px;
-}
-
-/* Standard table */
-table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 850px;
-}
-
-th,
-td {
-    padding: 13px 14px;
-    text-align: left;
-    border-bottom: 1px solid #e5e7eb;
-    font-size: 14px;
-}
-
-th {
-    background: #f9fafb;
-    font-weight: 700;
-    color: #374151;
-}
-
-/* Table row hover */
-tbody tr:hover {
-    background: #f9fafb;
-}
-
-        /* =====================================================
-           SEGMENT BADGES
-        ===================================================== */
-
-        .badge {
-            display: inline-block;
-            padding: 5px 10px;
-            border-radius: 20px;
-
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .champions {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .loyal {
-            background: #dbeafe;
-            color: #1e40af;
-        }
-
-        .potential {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .risk {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-
-        .attention {
-            background: #f3f4f6;
-            color: #374151;
-        }
-
-        .score {
-            font-weight: 700;
-            font-size: 15px;
-        }
-
-        /* =====================================================
-           METHODOLOGY
-        ===================================================== */
-
-        .methodology {
-            line-height: 1.7;
-            margin-bottom: 30px;
-        }
-
-        .methodology p {
-            margin-bottom: 15px;
-        }
-
-        .percentage {
-            color: #6b7280;
-            font-size: 13px;
-        }
-
-        /* =====================================================
-           FOOTER
-        ===================================================== */
-
-        .footer-note {
-            text-align: center;
-            color: #6b7280;
-            font-size: 13px;
-            padding: 10px 0 25px;
-        }
-
-        /* =====================================================
-           RESPONSIVE DESIGN
-        ===================================================== */
-
-        @media (max-width: 900px) {
-
-            .grid {
-                grid-template-columns: 1fr;
-            }
-
-            .container {
-                padding: 18px;
-            }
-
-            .navbar-container {
-                flex-direction: column;
-                gap: 12px;
-            }
-
-            .nav-links {
-                width: 100%;
-                justify-content: center;
-            }
-        }
-    </style>
-
     <link rel="stylesheet" href="{% static 'dashboard/theme.css' %}">
 </head>
 
 
-<body>
+<body class="theme-navy">
 
     {% include "dashboard/navbar.html" %}
 
-    <main class="container">
+    <main class="container rfm-page detail-page" id="main-content">
 
         <!-- =================================================
              PAGE HEADER
         ================================================= -->
 
-        <section class="page-title">
+        {% include "dashboard/page_header.html" with eyebrow="CUSTOMERS / SEGMENTATION" heading="RFM Analysis" description="Understand customer segments through stored recency, order frequency and purchase volume." source="Stored customer profiles" %}
+        <nav class="detail-nav" aria-label="RFM sections"><a href="#segments">Segment overview</a><a href="#segment-comparison">Compare segments</a><a href="#distributions">Distributions</a><a href="#top-customers">Customer records</a><a href="#rfm-guide">Scoring guide</a></nav>
+        {% if segment_data %}
+        <aside class="insight-brief" aria-labelledby="rfm-insight"><div><p class="eyebrow">START WITH THE LARGEST LISTED SEGMENT</p><h2 id="rfm-insight">{{ segment_data.0.segment }}: {{ segment_data.0.count|floatformat:"0g" }} profiles</h2><p>{{ segment_data.0.percentage }}% of stored customer profiles belong to this segment. Explore those customers before reviewing individual scores; the label is a stored classification, not a churn prediction.</p></div><a href="{% url 'customer_explorer' %}?segment={{ segment_data.0.segment|urlencode }}#directory">Explore this segment &rarr;</a></aside>
+        {% else %}<p class="notice" role="status">No stored RFM profiles are available. Charts and segment comparisons will populate when profiles are present.</p>{% endif %}
+        <div class="detail-section-heading"><div><p class="eyebrow">STORED CUSTOMER SEGMENTS</p><h2>Where your customers sit</h2></div><p>{{ total_customers|floatformat:"0g" }} customer profiles &middot; Select a segment to explore its customers</p></div>
 
-            <h2>
-                Customer RFM Analysis
-            </h2>
-
-            <p>
-                Customer segmentation using
-                Recency, Frequency and Monetary
-                purchasing behaviour.
-            </p>
-
-        </section>
 
 
         <!-- =================================================
              KPI CARDS
         ================================================= -->
 
-        <section class="cards">
+        <section class="cards rfm-cards" id="segments" aria-label="RFM segment counts">
 
             <!-- Champions -->
 
@@ -405,6 +66,7 @@ tbody tr:hover {
 
                 </div>
 
+                <a class="segment-drill" href="{% url 'customer_explorer' %}?segment=Champions#directory">View customers <span aria-hidden="true">&rarr;</span></a>
             </div>
 
 
@@ -435,6 +97,7 @@ tbody tr:hover {
 
                 </div>
 
+                <a class="segment-drill" href="{% url 'customer_explorer' %}?segment=Loyal%20Customers#directory">View customers <span aria-hidden="true">&rarr;</span></a>
             </div>
 
 
@@ -465,6 +128,7 @@ tbody tr:hover {
 
                 </div>
 
+                <a class="segment-drill" href="{% url 'customer_explorer' %}?segment=Potential%20Loyalists#directory">View customers <span aria-hidden="true">&rarr;</span></a>
             </div>
 
 
@@ -495,6 +159,7 @@ tbody tr:hover {
 
                 </div>
 
+                <a class="segment-drill" href="{% url 'customer_explorer' %}?segment=At%20Risk#directory">View customers <span aria-hidden="true">&rarr;</span></a>
             </div>
 
 
@@ -525,6 +190,7 @@ tbody tr:hover {
 
                 </div>
 
+                <a class="segment-drill" href="{% url 'customer_explorer' %}?segment=Needs%20Attention#directory">View customers <span aria-hidden="true">&rarr;</span></a>
             </div>
 
 
@@ -553,55 +219,14 @@ tbody tr:hover {
              CHARTS
         ================================================= -->
 
-        <section class="grid">
-
-            <!-- Segment Distribution -->
-
-            <div class="panel">
-
-                <h3>
-                    Customer Segment Distribution
-                </h3>
-
-                <div class="chart-container">
-
-                    <canvas id="segmentChart"></canvas>
-
-                </div>
-
-            </div>
-
-
-            <!-- RFM Score Distribution -->
-
-            <div class="panel">
-
-                <h3>
-                    RFM Score Distribution
-                </h3>
-
-                <div class="chart-container">
-
-                    <canvas id="scoreChart"></canvas>
-
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- =================================================
-             SEGMENT SUMMARY
-        ================================================= -->
-
-        <section class="panel methodology">
+        <section class="panel methodology segment-summary" id="segment-comparison">
 
             <h3>
                 Segment Summary
             </h3>
 
-            <div class="table-container compact-table">
+            <p class="hint">Compare each segment's share of stored profiles. Segment names describe existing classifications; recency is a relative proxy and monetary measures product volume.</p>
+            <div class="table-container compact-table" tabindex="0" role="region" aria-label="Segment comparison">
 
                 <table>
 
@@ -625,8 +250,8 @@ tbody tr:hover {
                                 Strategic Meaning
                             </th>
 
+                            <th scope="col">Explore</th>
                         </tr>
-
                     </thead>
 
 
@@ -679,7 +304,7 @@ tbody tr:hover {
 
 
                             <td class="percentage">
-                                {{ segment.percentage }}%
+                                <span>{{ segment.percentage }}%</span><span class="segment-share" aria-hidden="true"><span style="width:{{ segment.percentage|floatformat:'2u' }}%"></span></span>
                             </td>
 
 
@@ -713,7 +338,7 @@ tbody tr:hover {
                                 {% endif %}
 
                             </td>
-
+                            <td><a class="record-link" href="{% url 'customer_explorer' %}?segment={{ segment.segment|urlencode }}#directory">View customers &rarr;</a></td>
                         </tr>
 
                         {% endfor %}
@@ -726,12 +351,59 @@ tbody tr:hover {
 
         </section>
 
+        <section class="grid" id="distributions" aria-label="RFM distributions">
+
+            <!-- Segment Distribution -->
+
+            <div class="panel">
+
+                <h3>
+                    Customer Segment Distribution
+                </h3>
+                <p class="chart-description">Share of stored customer profiles in each RFM segment</p><p class="chart-help" id="segment-chart-help">Hover for counts and shares. Select legend entries to show or hide segments. The comparison table provides the same segment values and customer links.</p>
+
+                <div class="chart-container">
+
+                    <canvas id="segmentChart" role="img" aria-label="Customer counts by stored RFM segment" aria-describedby="segment-chart-help">Segment values are available in the Segment Summary table.</canvas>
+
+                </div>
+
+            </div>
+
+
+            <!-- RFM Score Distribution -->
+
+            <div class="panel">
+
+                <h3>
+                    RFM Score Distribution
+                </h3>
+                <p class="chart-description">Customer counts across combined scores from 3 to 15</p><p class="chart-help" id="score-chart-help">Higher scores combine higher stored R, F and M components. Hover for the exact customer count; scores do not measure spending or forecast return.</p>
+
+                <div class="chart-container">
+
+                    <canvas id="scoreChart" role="img" aria-label="Customer counts by combined RFM score" aria-describedby="score-chart-help">Exact counts are available in the expandable score table below.</canvas>
+
+                </div>
+                <details class="chart-values"><summary>View exact score counts</summary><table><thead><tr><th scope="col">Combined RFM score</th><th scope="col">Customers</th></tr></thead><tbody>{% for score in score_distribution %}<tr><td>{{ score.rfm_score }}</td><td>{{ score.count|floatformat:"0g" }}</td></tr>{% empty %}<tr><td colspan="2">No score records are available.</td></tr>{% endfor %}</tbody></table></details>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             SEGMENT SUMMARY
+        ================================================= -->
+
+
+
 
         <!-- =================================================
              TOP CUSTOMERS
         ================================================= -->
 
-        <section class="panel methodology">
+        <section class="panel methodology customer-ranking" id="top-customers">
 
             <h3>
                 Highest-Scoring Customers
@@ -801,11 +473,6 @@ tbody tr:hover {
 
                                 <a
                                     href="{% url 'customer_explorer' %}?user_id={{ customer.user_id }}"
-                                    style="
-                                        color: #2563eb;
-                                        text-decoration: none;
-                                        font-weight: 600;
-                                    "
                                 >
                                     {{ customer.user_id }}
                                 </a>
@@ -911,6 +578,7 @@ tbody tr:hover {
              RFM METHODOLOGY
         ================================================= -->
 
+        <details class="detail-guide" id="rfm-guide"><summary>Scoring definitions and segment interpretation</summary>
         <section class="panel methodology">
 
             <h3>
@@ -1031,6 +699,7 @@ tbody tr:hover {
         </section>
 
 
+        </details>
         <div class="footer-note">
 
             Instacart Customer Intelligence Platform
@@ -1054,6 +723,19 @@ tbody tr:hover {
        DATA FROM DJANGO
     ===================================================== */
 
+    const customerCount = new Intl.NumberFormat('en-GB');
+    const compactCount = new Intl.NumberFormat('en-GB', {notation: 'compact', maximumFractionDigits: 1});
+    Chart.defaults.animation.duration = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 240;
+    Chart.defaults.font.family = 'Segoe UI, Arial, sans-serif';
+    Chart.defaults.color = '#526178';
+    Chart.defaults.plugins.tooltip.backgroundColor = "#14233B";
+    Chart.defaults.plugins.tooltip.padding = 12;
+    Chart.defaults.plugins.tooltip.displayColors = false;
+    Chart.defaults.plugins.tooltip.cornerRadius = 8;
+    Chart.defaults.plugins.legend.labels.boxWidth = 8;
+    Chart.defaults.plugins.legend.labels.boxHeight = 8;
+    Chart.defaults.borderColor = '#E1E7F0';
+    const segmentPalette = {'Champions': '#263A57', 'Loyal Customers': '#377DFF', 'Potential Loyalists': '#5685C8', 'At Risk': '#526178', 'Needs Attention': '#7B8EA8'};
     const segmentData = [
         {% for segment in segment_data %}
         {
@@ -1101,7 +783,9 @@ tbody tr:hover {
                                 item => item.value
                             ),
 
-                            borderWidth: 2,
+                            backgroundColor: segmentData.map(item => segmentPalette[item.label] || '#7B8EA8'),
+                            borderColor: '#ffffff',
+                            borderWidth: 3,
 
                             hoverOffset: 8
                         }
@@ -1116,7 +800,7 @@ tbody tr:hover {
                     maintainAspectRatio: false,
 
 
-                    cutout: "62%",
+                    cutout: "72%",
 
 
                     plugins: {
@@ -1127,7 +811,7 @@ tbody tr:hover {
 
                             labels: {
 
-                                padding: 18,
+                                padding: 14,
 
                                 usePointStyle: true,
 
@@ -1156,14 +840,13 @@ tbody tr:hover {
                                         context.raw;
 
                                     const percentage =
-                                        ((value / total) * 100)
-                                            .toFixed(1);
+                                        total ? ((value / total) * 100).toFixed(1) : "0.0";
 
                                     return (
                                         " " +
                                         context.label +
                                         ": " +
-                                        value +
+                                        customerCount.format(value) +
                                         " customers (" +
                                         percentage +
                                         "%)"
@@ -1207,7 +890,9 @@ tbody tr:hover {
                                 item => item.value
                             ),
 
-                            borderRadius: 6,
+                            backgroundColor: "#377DFF",
+                            maxBarThickness: 42,
+                            borderRadius: 4,
 
                             borderSkipped: false
                         }
@@ -1245,7 +930,9 @@ tbody tr:hover {
                             grid: {
 
                                 display: false
-                            }
+                            },
+                            border: {display: false},
+                            ticks: {autoSkip: false, maxRotation: 0}
                         },
 
 
@@ -1261,10 +948,9 @@ tbody tr:hover {
                                     "Number of Customers"
                             },
 
-                            ticks: {
-
-                                precision: 0
-                            }
+                            grid: {color: '#E1E7F0', drawTicks: false},
+                            border: {display: false},
+                            ticks: {precision: 0, maxTicksLimit: 6, callback: value => compactCount.format(value)}
                         }
                     },
 
@@ -1285,7 +971,7 @@ tbody tr:hover {
 
                                     return (
                                         " Customers: " +
-                                        context.raw
+                                        customerCount.format(context.raw)
                                     );
                                 }
                             }
@@ -1298,6 +984,7 @@ tbody tr:hover {
 
 </script>
 
+<script src="{% static 'dashboard/detail.js' %}" defer></script>
 </body>
 
 </html>

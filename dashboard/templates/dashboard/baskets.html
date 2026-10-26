@@ -7,14 +7,12 @@
     <title>Basket &amp; Reorder Intelligence | Instacart</title>
     <link rel="stylesheet" href="{% static 'dashboard/theme.css' %}">
 </head>
-<body>
+<body class="theme-navy">
 {% include "dashboard/navbar.html" %}
-<main>
-    <header class="product-hero">
-        <div><p class="eyebrow">BASKET &amp; REORDER INTELLIGENCE</p><h1>See what belongs together.</h1><p class="muted">Understand basket composition, observed reorders and product combinations in the original prior-order dataset.</p></div>
-        <span class="source-pill">{% if snapshot %}Exact frequent-pair snapshot{% else %}Awaiting basket build{% endif %}</span>
-    </header>
-    <nav class="product-subnav" aria-label="Basket sections"><a href="#composition">Basket composition</a><a href="#pairs">Product pairs</a><a href="#definitions">Metric guide</a></nav>
+<main class="baskets-page detail-page" id="main-content">
+    {% include "dashboard/page_header.html" with eyebrow="BASKETS / ASSOCIATIONS" heading="Basket & Reorder Intelligence" lead="See what belongs together." description="Understand basket composition, observed reorders and product combinations in the original prior-order dataset." source="Exact frequent-pair snapshot" unavailable="Awaiting basket build" %}
+    <nav class="product-subnav" aria-label="Basket sections"><a href="#composition">Basket composition</a><a href="#reorders">Reorders by size</a><a href="#pairs">Product pairs</a><a href="#definitions">Metric guide</a></nav>
+    {% if snapshot.order_count %}<aside class="insight-brief" aria-labelledby="basket-insight"><div><p class="eyebrow">BASKET SIZE IN CONTEXT</p><h2 id="basket-insight">Median basket: {{ median_products|floatformat:"-1" }} distinct products</h2><p>The mean is {{ snapshot.average_products|floatformat:2 }} products across {{ snapshot.order_count|floatformat:"0g" }} nonempty prior baskets. Compare the size distribution with row-level reorder rates before exploring product pairs.</p></div><a href="#composition">Compare basket sizes &darr;</a></aside>{% endif %}
     {% if not snapshot %}
     <section class="panel empty"><h2>Ready to connect the basket.</h2><p>Build the basket snapshot from the original prior order-product CSV to populate distributions, reorder metrics and frequent pairs. Existing dashboards and records remain available.</p></section>
     {% else %}
@@ -27,31 +25,38 @@
     </section>
     <p class="method-note">Prior-order population only; it differs from the processed customer dashboards. Basket size and pair metrics use distinct products. Reorder rates use source rows with a valid indicator.</p>
     <section id="composition" class="product-grid" aria-label="Basket composition and reorder behaviour">
-        <section class="panel product-panel"><div class="section-top"><h2>How full is the basket?</h2><span class="source-pill">Distinct products</span></div><p class="method-note">Each order belongs to one size band. Shares use all {{ snapshot.order_count|floatformat:"0g" }} nonempty baskets.</p>
+        <section class="panel product-panel"><div class="section-top"><h2>Basket-size distribution</h2><span class="source-pill">Distinct products</span></div><p class="method-note">Bar lengths are relative to the largest band. Each order belongs to one size band. Shares use all {{ snapshot.order_count|floatformat:"0g" }} nonempty baskets.</p>
             {% for bucket in composition_bins %}<div class="chart-row"><div class="chart-row-label"><span>{{ bucket.label }}</span><strong>{{ bucket.orders|floatformat:"0g" }} <span class="muted">({{ bucket.share|floatformat:1 }}%)</span></strong></div><div class="chart-track" aria-hidden="true"><div class="chart-fill" style="width:{{ bucket.bar_width|floatformat:'2u' }}%"></div></div></div>{% endfor %}
             <p class="method-note">{{ snapshot.memberships|floatformat:"0g" }} distinct order-product memberships across {{ snapshot.occurrences|floatformat:"0g" }} source rows. Repeated rows count once for basket size and pair membership.</p>
         </section>
-        <section class="panel product-panel"><h2>Reorders by basket size</h2><p class="method-note">A row is a reorder only when <code>reordered = 1</code>. The denominator is rows marked exactly 0 or 1 in that size band.</p>
+        <section class="panel product-panel" id="reorders"><h2>Reorders by basket size</h2><p class="method-note">A row is a reorder only when <code>reordered = 1</code>. The denominator is rows marked exactly 0 or 1 in that size band.</p>
             <div class="basket-table" tabindex="0" role="region" aria-label="Reorder rates by basket size"><table><thead><tr><th scope="col">Basket size</th><th scope="col">Reordered rows</th><th scope="col">Valid rows</th><th scope="col">Rate</th></tr></thead><tbody>{% for bucket in composition_bins %}<tr><td>{{ bucket.label }}</td><td>{{ bucket.reorders|floatformat:"0g" }}</td><td>{{ bucket.valid|floatformat:"0g" }}</td><td>{% if bucket.reorder_rate != None %}{{ bucket.reorder_rate|floatformat:1 }}%{% else %}Unknown{% endif %}</td></tr>{% endfor %}</tbody></table></div>
             <p class="method-note">{{ snapshot.unknown_reorders|floatformat:"0g" }} missing or invalid indicators are excluded. This is an occurrence-level rate, not a customer's probability of returning.</p>
         </section>
     </section>
     {% endif %}
     <section class="panel product-panel" id="pairs" aria-labelledby="pairs-heading">
-        <div class="section-top"><div><p class="eyebrow">MARKET BASKET ANALYSIS</p><h2 id="pairs-heading">Frequently found together.</h2></div><a class="button secondary" href="{% url 'basket_intelligence' %}#pairs">Reset filters</a></div>
+        <div class="section-top"><div><p class="eyebrow">MARKET BASKET ANALYSIS</p><h2 id="pairs-heading">Product pair explorer</h2></div><a class="button secondary" href="{% url 'basket_intelligence' %}#pairs">Reset filters</a></div>
         {% if snapshot %}<p class="method-note">Build floor: {{ snapshot.support_floor|floatformat:"0g" }} co-orders ({{ snapshot.support_floor_pct|floatformat:5 }}% of all baskets). Raise either support control to narrow the results. Results below this floor require a new build.</p>{% endif %}
         <form class="product-filter basket-filter" method="get" action="{% url 'basket_intelligence' %}#pairs">
+            <fieldset class="filter-group"><legend>1. Choose products or categories</legend><div class="filter-group-fields">
             <div class="field">{{ pair_form.q.label_tag }}{{ pair_form.q }}</div>
             <div class="field"><label for="department-filter">Either product's department</label><select id="department-filter" name="department"><option value="">All departments</option>{% for department in departments %}<option value="{{ department.pk }}"{% if selected_department == department.pk|stringformat:"s" %} selected{% endif %}>{{ department.name|capfirst }}</option>{% endfor %}</select></div>
             <div class="field"><label for="aisle-filter">Either product's aisle</label><select id="aisle-filter" name="aisle"><option value="">All aisles</option>{% for aisle in aisles %}<option value="{{ aisle.pk }}"{% if selected_aisle == aisle.pk|stringformat:"s" %} selected{% endif %}>{{ aisle.name|capfirst }}</option>{% endfor %}</select></div>
+            </div></fieldset>
+            <fieldset class="filter-group"><legend>2. Set relationship thresholds</legend><div class="filter-group-fields">
             <div class="field">{{ pair_form.min_support.label_tag }}{{ pair_form.min_support }}</div>
             <div class="field">{{ pair_form.min_orders.label_tag }}{{ pair_form.min_orders }}</div>
             <div class="field">{{ pair_form.min_confidence.label_tag }}{{ pair_form.min_confidence }}</div>
+            </div></fieldset><div class="filter-actions">
             <div class="field">{{ pair_form.sort.label_tag }}{{ pair_form.sort }}</div>
             <button type="submit">Explore pairs</button>
+            </div>
         </form>
         {% if pair_form.errors %}<div class="notice" role="alert">Check the pair filters. {{ pair_form.errors }}</div>{% endif %}
         <p class="method-note">{{ pair_page.paginator.count|floatformat:"0g" }} matching pairs. Each unordered pair appears once; A is the lower product ID. Confidence filters accept either direction. Category filters match either member; multiple filters may match different members. Support and lift always use the full source population, even when filters are applied.</p>
+        <div class="result-context" role="status"><strong>{{ pair_page.paginator.count|floatformat:"0g" }} pairs</strong>{% if pair_form.q.value %}<span>Product: {{ pair_form.q.value }}</span>{% endif %}{% if selected_department %}<span>Department: {% for department in departments %}{% if selected_department == department.pk|stringformat:"s" %}{{ department.name|capfirst }}{% endif %}{% endfor %}</span>{% endif %}{% if selected_aisle %}<span>Aisle: {% for aisle in aisles %}{% if selected_aisle == aisle.pk|stringformat:"s" %}{{ aisle.name|capfirst }}{% endif %}{% endfor %}</span>{% endif %}<span>Minimum support: {{ pair_form.min_support.value }}%</span><span>Co-orders: {{ pair_form.min_orders.value }}+</span>{% if pair_form.min_confidence.value %}<span>Minimum confidence: {{ pair_form.min_confidence.value }}%</span>{% endif %}<span>Sort: {% if not pair_form.sort.value %}Most co-orders{% else %}{% for value, label in pair_form.fields.sort.choices %}{% if value == pair_form.sort.value %}{{ label }}{% endif %}{% endfor %}{% endif %}</span></div>
+        <p class="table-guidance">Read across each row to compare support, directional confidence and lift. Product links open the catalog. Scroll horizontally for all measures.</p>
         <div class="product-table basket-pairs" tabindex="0" role="region" aria-label="Frequent product pair rankings"><table>
             <thead><tr><th scope="col">Product A</th><th scope="col">Product B</th><th scope="col">Co-orders</th><th scope="col">Support</th><th scope="col">Confidence A &rarr; B</th><th scope="col">Confidence B &rarr; A</th><th scope="col">Lift</th></tr></thead>
             <tbody>{% for pair in pair_page %}<tr>
@@ -73,5 +78,6 @@
     </section>
     {% if snapshot %}<p class="snapshot-note">Source: {{ snapshot.source_name }} &middot; Built {{ snapshot.imported_at|date:"j M Y, H:i" }} UTC &middot; {{ snapshot.product_count|floatformat:"0g" }} observed products &middot; Support floor {{ snapshot.support_floor|floatformat:"0g" }} baskets.</p>{% endif %}
 </main>
+<script src="{% static 'dashboard/detail.js' %}" defer></script>
 </body>
 </html>

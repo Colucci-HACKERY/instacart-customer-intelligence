@@ -5,84 +5,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Customer Explorer | Instacart Customer Intelligence</title>
-    <style>
-        * { box-sizing: border-box; }
-        body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; background: #f5f7fb; color: #1f2937; }
-        a { color: #1d4ed8; }
-        .navbar { background: #111827; border-bottom: 1px solid #374151; }
-        .navbar-container { max-width: 1400px; margin: auto; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
-        .brand { color: white; text-decoration: none; font-size: 20px; font-weight: 700; }
-        .nav-links { display: flex; flex-wrap: wrap; gap: 10px; }
-        .nav-link { color: #d1d5db; text-decoration: none; padding: 9px 16px; border-radius: 8px; font-size: 14px; font-weight: 600; }
-        .nav-link:hover { background: #374151; color: white; }
-        .nav-link[href="{% url 'customer_explorer' %}"] { background: #2563eb; color: white; }
-        main { max-width: 1400px; margin: auto; padding: 35px; }
-        h1, h2, h3 { color: #172b4d; margin-top: 0; }
-        h1 { margin-bottom: 8px; font-size: 32px; }
-        h2 { font-size: 21px; margin-bottom: 12px; }
-        p { line-height: 1.6; }
-        .muted, .hint { color: #526177; }
-        .hint { font-size: 13px; margin: 8px 0 0; }
-        .panel, .metric { background: white; border: 1px solid #e5eaf2; border-radius: 14px; box-shadow: 0 3px 12px rgba(0,0,0,.04); }
-        .panel { padding: 24px; margin: 24px 0; }
-        .section-header, .profile-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
-        .eyebrow { text-transform: uppercase; letter-spacing: .1em; font-size: 12px; font-weight: 700; color: #526177; margin: 0 0 7px; }
-        .profile-header h2 { font-size: 26px; margin-bottom: 0; }
-        form { display: flex; align-items: end; flex-wrap: wrap; gap: 12px; }
-        .field { flex: 1; min-width: 180px; max-width: 480px; }
-        label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; }
-        input, select, button, .button { font: inherit; border-radius: 8px; padding: 12px 16px; }
-        input, select { width: 100%; min-width: 0; border: 1px solid #b7c2d2; background: white; color: #1f2937; }
-        button, .button { border: 1px solid transparent; background: #2563eb; color: white; cursor: pointer; font-weight: 600; text-decoration: none; display: inline-block; }
-        button:hover, .button:hover { background: #1d4ed8; }
-        .secondary { background: #eef2f7; color: #334155; }
-        .secondary:hover { background: #e2e8f0; }
-        :focus-visible { outline: 3px solid #2563eb; outline-offset: 3px; }
-        .errorlist, .notice { padding: 12px 16px; border-radius: 8px; background: #fff7ed; color: #9a3412; }
-        .errorlist { list-style: none; margin: 16px 0 0; }
-        .metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin: 20px 0; }
-        .metric { padding: 20px; }
-        .metric h3 { font-size: 14px; color: #526177; font-weight: 600; margin-bottom: 10px; }
-        .metric strong { font-size: 28px; color: #172b4d; overflow-wrap: anywhere; }
-        .badge { display: inline-block; border-radius: 24px; padding: 7px 12px; background: #edf0f5; color: #334155; font-size: 13px; font-weight: 700; white-space: nowrap; }
-        .champions { background: #dcfce7; color: #166534; }
-        .loyal-customers { background: #dbeafe; color: #1e40af; }
-        .potential-loyalists { background: #fef3c7; color: #92400e; }
-        .at-risk { background: #fee2e2; color: #991b1b; }
-        .needs-attention { background: #f3e8ff; color: #6b21a8; }
-        .scores { display: flex; flex-wrap: wrap; gap: 10px; margin: 20px 0; }
-        .scores span { background: #eff6ff; color: #1e40af; padding: 10px 16px; border-radius: 8px; }
-        .table-scroll { overflow: auto; }
-        .directory { max-height: 490px; }
-        table { width: 100%; border-collapse: collapse; font-size: 14px; text-align: left; }
-        caption { text-align: left; color: #526177; padding-bottom: 14px; font-size: 13px; }
-        th, td { padding: 13px 14px; border-bottom: 1px solid #e5e7eb; white-space: nowrap; }
-        th { background: #f8fafc; color: #475569; font-size: 12px; text-transform: uppercase; letter-spacing: .03em; }
-        .directory th { position: sticky; top: 0; }
-        tbody tr:hover { background: #f8fafc; }
-        tr[aria-current="true"] { background: #eff6ff; }
-        td a { font-weight: 700; }
-        .pagination { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-top: 18px; font-size: 14px; }
-        .page-links { display: flex; flex-wrap: wrap; gap: 12px; }
-        .empty { padding: 24px; text-align: center; color: #526177; }
-        details { color: #475569; font-size: 14px; margin-top: 20px; }
-        summary { cursor: pointer; font-weight: 600; color: #172b4d; }
-        @media (max-width: 1000px) { .navbar-container { align-items: flex-start; flex-direction: column; } .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-        @media (max-width: 600px) { main { padding: 18px; } .panel { padding: 18px; } h1 { font-size: 28px; } .navbar-container { padding: 16px 18px; } .nav-links { gap: 4px; } .nav-link { padding: 9px 10px; } .field { max-width: none; flex-basis: 100%; } form button { width: 100%; } .metrics { grid-template-columns: 1fr; } }
-    </style>
     <link rel="stylesheet" href="{% static 'dashboard/theme.css' %}">
 </head>
-<body>
+<body class="theme-navy">
 {% include "dashboard/navbar.html" %}
-<main>
-    <header>
-        <p class="eyebrow">Customer intelligence</p>
-        <h1>Customer Explorer</h1>
-        <p class="muted">Explore customer segments, inspect RFM profiles and review recorded ordering behaviour.</p>
-    </header>
+<main class="customer-page detail-page" id="main-content">
+    {% include "dashboard/page_header.html" with eyebrow="CUSTOMERS / DIRECTORY" heading="Customer Explorer" description="Explore customer segments, inspect RFM profiles and review recorded ordering behaviour." source="Stored customer profiles" %}
+    <nav class="detail-nav" aria-label="Customer explorer sections"><a href="{% querystring %}#customer-controls">Search &amp; filters</a><a href="{% querystring %}#directory">Customer directory</a>{% if customer %}<a href="{% querystring orders_page=None %}#profile">Selected profile</a><a href="{% querystring %}#orders">Recorded orders</a>{% endif %}</nav>
 
-    <section class="panel" aria-labelledby="search-heading">
-        <h2 id="search-heading">Find a customer</h2>
+
+    <section class="panel control-deck" id="customer-controls" aria-labelledby="search-heading">
+        <div class="detail-section-heading"><div><p class="eyebrow">FIND OR BROWSE</p><h2 id="search-heading">Find a customer</h2></div><a href="{% querystring %}#directory" class="text-link">Browse {{ directory_page.paginator.count|floatformat:"0g" }} matching customers &darr;</a></div>
+        <div class="customer-control-grid"><div><h3>Open a profile</h3>
         <form method="get" action="{% url 'customer_explorer' %}">
             {% if selected_segment %}<input type="hidden" name="segment" value="{{ selected_segment }}">{% endif %}
             <div class="field">{{ search_form.user_id.label_tag }}{{ search_form.user_id }}</div>
@@ -94,13 +28,26 @@
         {% if customer_not_found %}
         <p class="notice" role="status">No RFM profile found for Customer ID {{ searched_id }}. Check the ID or choose a customer from the directory.</p>
         {% endif %}
+        </div><div><h3>Filter the directory</h3>
+        <form method="get" action="{% url 'customer_explorer' %}">
+            {% if searched_id %}<input type="hidden" name="user_id" value="{{ searched_id }}">{% endif %}
+            <div class="field"><label for="segment">Customer segment</label><select name="segment" id="segment">
+                <option value="">All segments</option>
+                {% if unknown_segment %}<option value="{{ selected_segment }}" selected>Unknown segment</option>{% endif %}
+                {% for segment in segments %}<option value="{{ segment }}"{% if selected_segment == segment %} selected{% endif %}>{{ segment }}</option>{% endfor %}
+            </select></div>
+            <button type="submit">Apply filter</button>
+            <a class="button secondary" href="{% querystring segment=None page=None %}#directory">Clear filter</a>
+        </form>
+        <p class="hint">The segment filter changes the directory only. A selected customer profile stays available.</p></div></div>
     </section>
 
     {% if customer %}
     <section aria-labelledby="profile-heading" id="profile">
+        <p class="selection-context">Selected profile: #{{ customer.user_id }} &middot; <a href="{% querystring %}#orders">View recorded orders &darr;</a></p>
         <div class="panel">
             <header class="profile-header">
-                <div><p class="eyebrow">Customer profile</p><h2 id="profile-heading">Customer #{{ customer.user_id }}</h2></div>
+                <div><p class="eyebrow">Customer profile</p><h2 id="profile-heading">Customer #{{ customer.user_id }}</h2><a class="text-link" href="{% querystring %}#directory">&larr; Back to customer directory</a></div>
                 {% include "dashboard/segment_badge.html" with segment=customer.segment %}
             </header>
             <div class="scores" aria-label="RFM score breakdown">
@@ -117,6 +64,7 @@
             <article class="metric"><h3>Monetary / purchase volume</h3><strong>{{ customer.monetary|floatformat:"-2g" }}</strong><p class="hint">Total products, measured by summed basket sizes</p></article>
             <article class="metric"><h3>Average basket size</h3><strong>{% if order_summary.average_basket != None %}{{ order_summary.average_basket|floatformat:"1g" }}{% else %}Unknown{% endif %}</strong><p class="hint">Products per order with a known basket size</p></article>
         </div>
+        <aside class="insight-brief" aria-labelledby="customer-insight"><div><p class="eyebrow">PROFILE AND HISTORY COVERAGE</p><h2 id="customer-insight">{{ order_summary.total_orders|floatformat:"0g" }} recorded orders for Customer #{{ customer.user_id }}</h2><p>Basket sizes are known for {{ order_summary.known_baskets|floatformat:"0g" }} orders; prior-order gaps are known for {{ order_summary.known_intervals|floatformat:"0g" }}. The profile above retains its stored scores, while the history below describes available records.</p></div><a href="{% querystring %}#orders">Inspect recorded orders &darr;</a></aside>
         <section class="panel" aria-labelledby="orders-heading" id="orders">
             <div class="section-header">
                 <h2 id="orders-heading">Recorded orders</h2>
@@ -133,7 +81,7 @@
             <div class="table-scroll" tabindex="0" role="region" aria-label="Customer order records">
                 <table>
                     <caption>Sorted by order ID ascending for reference, not chronology. No order dates or sequence numbers are stored.</caption>
-                    <thead><tr><th scope="col">Order ID</th><th scope="col">Day of week</th><th scope="col">Products in basket</th><th scope="col">Days since prior order</th></tr></thead>
+                    <thead><tr><th scope="col" aria-sort="ascending">Order ID <span aria-hidden="true">&uarr;</span></th><th scope="col">Day of week</th><th scope="col">Products in basket</th><th scope="col">Days since prior order</th></tr></thead>
                     <tbody>
                     {% for order in order_page %}
                         <tr><td>#{{ order.order_id }}</td><td>{{ order.day_label }}</td><td>{% if order.order_size != None %}{{ order.order_size|floatformat:"-2g" }}{% else %}Unknown{% endif %}</td><td>{% if order.days_since_prior_order != None %}{{ order.days_since_prior_order|floatformat:"-2g" }}{% else %}Not recorded{% endif %}</td></tr>
@@ -159,26 +107,18 @@
         </section>
     </section>
     {% elif not search_form.is_bound %}
-    <div class="panel empty"><h2>Choose a customer to explore</h2><p>Search by Customer ID or select an ID in the directory to open a profile and recorded orders.</p></div>
+    <div class="selection-placeholder"><h2>Choose a customer to explore</h2><p>Search by Customer ID or select an ID in the directory to open a profile and recorded orders.</p></div>
     {% endif %}
 
     <section class="panel" aria-labelledby="directory-heading" id="directory">
-        <div class="section-header"><div><h2 id="directory-heading">Customer directory</h2><p class="hint">{{ directory_page.paginator.count|floatformat:"0g" }} matching customers &middot; Ordered by Customer ID</p></div></div>
-        <form method="get" action="{% url 'customer_explorer' %}">
-            {% if searched_id %}<input type="hidden" name="user_id" value="{{ searched_id }}">{% endif %}
-            <div class="field"><label for="segment">Customer segment</label><select name="segment" id="segment">
-                <option value="">All segments</option>
-                {% if unknown_segment %}<option value="{{ selected_segment }}" selected>Unknown segment</option>{% endif %}
-                {% for segment in segments %}<option value="{{ segment }}"{% if selected_segment == segment %} selected{% endif %}>{{ segment }}</option>{% endfor %}
-            </select></div>
-            <button type="submit">Apply filter</button>
-            <a class="button secondary" href="{% querystring segment=None page=None %}#directory">Clear filter</a>
-        </form>
+        <div class="section-header"><div><p class="eyebrow">BROWSE PROFILES</p><h2 id="directory-heading">Customer directory</h2><p class="hint">{{ directory_page.paginator.count|floatformat:"0g" }} matching customers &middot; Ordered by Customer ID</p></div></div>
+
+        <div class="result-context" role="status"><strong>{{ directory_page.paginator.count|floatformat:"0g" }} customers</strong><span>{% if selected_segment %}Segment: {{ selected_segment }}{% else %}All segments{% endif %}</span><span>Customer ID ascending &uarr;</span></div>
         {% if unknown_segment %}<p class="notice" role="status">The selected segment is not available. Choose a segment from the list or clear the filter.</p>{% endif %}
         <div class="table-scroll directory" tabindex="0" role="region" aria-label="Customer directory">
             <table>
                 <caption>Purchase volume is total products, not currency. Recency is the stored relative proxy.</caption>
-                <thead><tr><th scope="col">Customer ID</th><th scope="col">Recency proxy (days)</th><th scope="col">Orders</th><th scope="col">Purchase volume</th><th scope="col">RFM score</th><th scope="col">Segment</th></tr></thead>
+                <thead><tr><th scope="col" aria-sort="ascending">Customer ID <span aria-hidden="true">&uarr;</span></th><th scope="col">Recency proxy (days)</th><th scope="col">Orders</th><th scope="col">Purchase volume</th><th scope="col">RFM score</th><th scope="col">Segment</th></tr></thead>
                 <tbody>
                 {% for row in customers %}
                 <tr{% if row.user_id == customer.user_id %} aria-current="true"{% endif %}>
@@ -201,5 +141,6 @@
         {% endif %}
     </section>
 </main>
+<script src="{% static 'dashboard/detail.js' %}" defer></script>
 </body>
 </html>

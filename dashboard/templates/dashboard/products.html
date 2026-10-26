@@ -7,15 +7,13 @@
     <title>Product Intelligence | Instacart</title>
     <link rel="stylesheet" href="{% static 'dashboard/theme.css' %}">
 </head>
-<body>
+<body class="theme-navy">
 {% include "dashboard/navbar.html" %}
-<main>
-    <header class="product-hero">
-        <div><p class="eyebrow">CATALOG INTELLIGENCE</p><h1>Know what fills the basket.</h1><p class="muted">Discover the products customers choose, the categories driving demand, and the items they come back for.</p></div>
-        <span class="source-pill">{% if snapshot %}Prior-order dataset{% else %}Awaiting product import{% endif %}</span>
-    </header>
-    <nav class="product-subnav" aria-label="Product sections"><a href="#performance">Performance</a><a href="#directory">Product explorer</a><a href="#categories">Category demand</a></nav>
+<main class="products-page detail-page" id="main-content">
+    {% include "dashboard/page_header.html" with eyebrow="CATALOG / PERFORMANCE" heading="Product Intelligence" lead="Know what fills the basket." description="Discover the products customers choose, the categories driving demand, and the items they come back for." source="Prior-order dataset" unavailable="Awaiting product import" %}
+    <nav class="product-subnav" aria-label="Product sections"><a href="#performance">Performance</a><a href="#categories">Category demand</a><a href="#directory">Product explorer</a></nav>
     <p class="method-note">Prior orders only. These totals describe a different order population from the processed customer dashboards.</p>
+    {% if snapshot and top_products %}<aside class="insight-brief" aria-labelledby="product-insight"><div><p class="eyebrow">TOP PRODUCT BY CONTAINING ORDERS</p><h2 id="product-insight">{{ top_products.0.name }}</h2><p>Appears in {{ top_products.0.order_count|floatformat:"0g" }} distinct prior orders. Product rankings count containing orders; category comparisons below count product occurrences.</p></div><a href="{% url 'product_intelligence' %}?q={{ top_products.0.product_id }}#directory">Inspect product measures &rarr;</a></aside>{% endif %}
     {% if not snapshot %}
     <section class="panel empty"><h2>Product intelligence is ready for data</h2><p>Import the original Instacart product catalog and prior order-product file to populate this workspace. Existing customer and order pages remain available.</p></section>
     {% else %}
@@ -25,9 +23,10 @@
         <article class="metric"><h3>Product occurrences</h3><strong>{{ snapshot.occurrences|floatformat:"0g" }}</strong><span class="metric-foot">Recorded order-product rows</span></article>
         <article class="metric"><h3>Reorder rate</h3><strong>{% if snapshot.reorder_rate != None %}{{ snapshot.reorder_rate|floatformat:1 }}%{% else %}Unknown{% endif %}</strong><span class="metric-foot">Across {{ snapshot.valid_reorder_count|floatformat:"0g" }} valid indicators</span></article>
     </section>
+    <div class="detail-section-heading"><div><p class="eyebrow">HEADLINE FINDINGS</p><h2>Products and departments driving demand</h2></div><p>Choose a product or department to open its directory results</p></div>
     <div class="product-grid">
         <section class="panel product-panel">
-            <div class="section-top"><h2>Basket favourites</h2><span class="source-pill">Top 5 products</span></div>
+            <div class="section-top"><h2>Most frequently ordered products</h2><span class="source-pill">Top 5 products</span></div>
             <p class="method-note">Ranked by distinct orders containing each product.</p>
             <div class="rank-list">
                 {% for product in top_products %}
@@ -39,8 +38,8 @@
             </div>
         </section>
         <section class="panel product-panel" aria-labelledby="department-chart-heading">
-            <div class="section-top"><h2 id="department-chart-heading">Where demand lives</h2><a href="#categories" class="method-note">View rankings &rarr;</a></div>
-            <p class="method-note">Top departments by product occurrences. Select a bar to explore products.</p>
+            <div class="section-top"><h2 id="department-chart-heading">Department demand</h2><a href="#categories" class="method-note">View rankings &rarr;</a></div>
+            <p class="method-note">Top departments by product occurrences. Select a bar to explore products. Bar length is relative to the largest department, not a share of all demand.</p>
             {% for department in department_demand|slice:":6" %}
             <a class="chart-row" href="{% url 'product_intelligence' %}?department={{ department.pk }}#directory" aria-label="Explore {{ department.name }}: {{ department.occurrences }} occurrences">
                 <span class="chart-row-label"><span>{{ department.name|capfirst }}</span><strong>{{ department.occurrences|floatformat:"0g" }}</strong></span>
@@ -51,8 +50,27 @@
     </div>
     {% endif %}
 
+    {% if snapshot %}
+    <section id="categories" aria-labelledby="categories-heading">
+        <div class="section-top"><div><p class="eyebrow">THE CATEGORY MIX</p><h2 id="categories-heading">Compare categories</h2></div><span class="method-note">Ranked by product occurrences</span></div>
+        <div class="product-grid">
+            <section class="panel product-panel"><h3>Department leaderboard</h3><p class="method-note">All {{ department_demand|length }} departments. Containing orders are deduplicated within each department.</p>
+                <div class="product-table" tabindex="0" role="region" aria-label="Department rankings"><table class="category-table"><thead><tr><th scope="col">Department</th><th scope="col">Orders</th><th scope="col">Occurrences</th><th scope="col">Reorder rate</th></tr></thead><tbody>{% for department in department_demand %}<tr><td><a href="{% url 'product_intelligence' %}?department={{ department.pk }}#directory">{{ department.name|capfirst }}</a></td><td>{{ department.order_count|floatformat:"0g" }}</td><td>{{ department.occurrences|floatformat:"0g" }}</td><td>{% if department.reorder_rate != None %}{{ department.reorder_rate|floatformat:1 }}%{% else %}Unknown{% endif %}</td></tr>{% endfor %}</tbody></table></div>
+            </section>
+            <section class="panel product-panel"><h3>Aisles with the most demand</h3><p class="method-note">Top 12 aisles by occurrences. Bar lengths are relative to the leading aisle. Use the directory filter to explore every aisle.</p>
+                {% for aisle in aisle_demand %}
+                <a class="chart-row" href="{% url 'product_intelligence' %}?aisle={{ aisle.pk }}#directory" aria-label="Explore {{ aisle.name }}: {{ aisle.occurrences }} occurrences">
+                    <span class="chart-row-label"><span>{{ forloop.counter }}. {{ aisle.name|capfirst }}</span><strong>{{ aisle.occurrences|floatformat:"0g" }}</strong></span>
+                    <div class="chart-track" aria-hidden="true"><div class="chart-fill" style="width:{{ aisle.bar_width|floatformat:'2u' }}%"></div></div>
+                    <span class="rank-category">{{ aisle.order_count|floatformat:"0g" }} containing orders &middot; Reorder rate {% if aisle.reorder_rate != None %}{{ aisle.reorder_rate|floatformat:1 }}%{% else %}unknown{% endif %}</span>
+                </a>{% endfor %}
+            </section>
+        </div>
+    </section>
+    {% endif %}
+
     <section class="panel product-panel" id="directory" aria-labelledby="directory-heading">
-        <div class="section-top"><div><p class="eyebrow">EXPLORE THE CATALOG</p><h2 id="directory-heading">Every product. A clearer picture.</h2></div><a class="button secondary" href="{% url 'product_intelligence' %}#directory">Reset filters</a></div>
+        <div class="section-top"><div><p class="eyebrow">EXPLORE THE CATALOG</p><h2 id="directory-heading">Product explorer</h2></div><a class="button secondary" href="{% url 'product_intelligence' %}#directory">Reset filters</a></div>
         <form class="product-filter" method="get" action="{% url 'product_intelligence' %}#directory">
             <div class="field"><label for="id_q">Search products</label>{{ product_form.q }}</div>
             <div class="field"><label for="department-filter">Department</label><select id="department-filter" name="department"><option value="">All departments</option>{% for department in departments %}<option value="{{ department.pk }}"{% if selected_department == department.pk|stringformat:"s" %} selected{% endif %}>{{ department.name|capfirst }}</option>{% endfor %}</select></div>
@@ -62,6 +80,7 @@
         </form>
         {% if product_form.errors %}<div class="notice" role="alert">Check your filters. {{ product_form.errors }}</div>{% endif %}
         <p class="method-note">{{ product_page.paginator.count|floatformat:"0g" }} matching products. Filters apply to this directory; summary cards and charts describe the full imported dataset.</p>
+        <div class="result-context" role="status"><strong>{{ product_page.paginator.count|floatformat:"0g" }} products</strong><span>{% if product_form.q.value %}Search: {{ product_form.q.value }}{% else %}All product names{% endif %}</span>{% if selected_department %}<span>Department: {% for department in departments %}{% if selected_department == department.pk|stringformat:"s" %}{{ department.name|capfirst }}{% endif %}{% endfor %}</span>{% endif %}{% if selected_aisle %}<span>Aisle: {% for aisle in aisles %}{% if selected_aisle == aisle.pk|stringformat:"s" %}{{ aisle.name|capfirst }}{% endif %}{% endfor %}</span>{% endif %}<span>Sort: {% if not product_form.sort.value %}Most containing orders{% else %}{% for value, label in product_form.fields.sort.choices %}{% if value == product_form.sort.value %}{{ label }}{% endif %}{% endfor %}{% endif %}</span></div>
         <div class="product-table" tabindex="0" role="region" aria-label="Product demand directory">
             <table>
                 <thead><tr><th scope="col">Product</th><th scope="col">Aisle / department</th><th scope="col">Containing orders</th><th scope="col">Occurrences</th><th scope="col">Reorders / valid rows</th><th scope="col">Reorder rate</th></tr></thead>
@@ -80,22 +99,6 @@
         {% endif %}
     </section>
     {% if snapshot %}
-    <section id="categories" aria-labelledby="categories-heading">
-        <div class="section-top"><div><p class="eyebrow">THE CATEGORY MIX</p><h2 id="categories-heading">Demand, aisle by aisle.</h2></div><span class="method-note">Ranked by product occurrences</span></div>
-        <div class="product-grid">
-            <section class="panel product-panel"><h3>Department leaderboard</h3><p class="method-note">All {{ department_demand|length }} departments. Containing orders are deduplicated within each department.</p>
-                <div class="product-table" tabindex="0" role="region" aria-label="Department rankings"><table class="category-table"><thead><tr><th scope="col">Department</th><th scope="col">Orders</th><th scope="col">Occurrences</th><th scope="col">Reorder rate</th></tr></thead><tbody>{% for department in department_demand %}<tr><td><a href="{% url 'product_intelligence' %}?department={{ department.pk }}#directory">{{ department.name|capfirst }}</a></td><td>{{ department.order_count|floatformat:"0g" }}</td><td>{{ department.occurrences|floatformat:"0g" }}</td><td>{% if department.reorder_rate != None %}{{ department.reorder_rate|floatformat:1 }}%{% else %}Unknown{% endif %}</td></tr>{% endfor %}</tbody></table></div>
-            </section>
-            <section class="panel product-panel"><h3>Aisles with the most demand</h3><p class="method-note">Top 12 aisles by occurrences. Use the directory filter to explore every aisle.</p>
-                {% for aisle in aisle_demand %}
-                <a class="chart-row" href="{% url 'product_intelligence' %}?aisle={{ aisle.pk }}#directory" aria-label="Explore {{ aisle.name }}: {{ aisle.occurrences }} occurrences">
-                    <span class="chart-row-label"><span>{{ forloop.counter }}. {{ aisle.name|capfirst }}</span><strong>{{ aisle.occurrences|floatformat:"0g" }}</strong></span>
-                    <div class="chart-track" aria-hidden="true"><div class="chart-fill" style="width:{{ aisle.bar_width|floatformat:'2u' }}%"></div></div>
-                    <span class="rank-category">{{ aisle.order_count|floatformat:"0g" }} containing orders &middot; Reorder rate {% if aisle.reorder_rate != None %}{{ aisle.reorder_rate|floatformat:1 }}%{% else %}unknown{% endif %}</span>
-                </a>{% endfor %}
-            </section>
-        </div>
-    </section>
     <section class="panel method-note">
         <details><summary>How to read these numbers</summary>
             <p><strong>Containing orders</strong> counts distinct order IDs containing a product, aisle or department. <strong>Occurrences</strong> counts source order-product rows, not quantities purchased. Duplicate rows would increase occurrences but not containing orders; this importer does not silently discard them. Category order counts are calculated directly and are not the sum of product order counts.</p>
@@ -106,5 +109,6 @@
     <p class="snapshot-note">Source: {{ snapshot.source_name }} &middot; Snapshot imported {{ snapshot.imported_at|date:"j M Y, H:i" }} UTC &middot; Invalid or missing reorder indicators: {{ snapshot.invalid_reorder_count|floatformat:"0g" }}.</p>
     {% endif %}
 </main>
+<script src="{% static 'dashboard/detail.js' %}" defer></script>
 </body>
 </html>
