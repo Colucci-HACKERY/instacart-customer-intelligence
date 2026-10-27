@@ -4,6 +4,13 @@ A Django-based business intelligence platform for exploring customer purchasing 
 
 The project combines analytical reporting with data-processing pipelines, database-backed dashboards, automated tests, and an independently audited predictive-modelling workflow.
 
+**Live Demo:** [View the live application](https://syd223.pythonanywhere.com/)
+
+A data analytics and customer intelligence platform built with Python and Django to explore customer purchasing behaviour, RFM segmentation, product performance, basket patterns, and historical retention trends using large-scale Instacart transaction data.
+
+**Tech Stack:** Python · Django · Pandas · SQLite · HTML · CSS · JavaScript
+
+
 ## Project objectives
 
 - Transform large retail datasets into useful business intelligence.
